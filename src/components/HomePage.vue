@@ -30,13 +30,15 @@
     </b-col>
   </b-row>
   <b-row>
-    <b-col col lg="4" sm="12">
-      <h1>prova pagina</h1>
-      <h2>{{numbers}}</h2>
-      <b-button @click="shuffleNumbers()">shuffle</b-button>
-      <BarChartVisualizer :numbers="numbers"></BarChartVisualizer>
+    <b-col sm="12" md="6">
+      <BarChartD3 :data_source="numbers" :options="opts"></BarChartD3>
     </b-col>
-    <b-col col lg="8" sm="12">
+    <b-col sm="12" md="6">
+      <BarChartD3 :data_source="numbers" :options="opts"></BarChartD3>
+    </b-col>
+  </b-row>
+  <b-row>
+    <b-col col lg="12" sm="12">
       <TableEmployees></TableEmployees>
     </b-col>
   </b-row>
@@ -45,7 +47,7 @@
 
 
 <script>
-  import BarChartVisualizer from "@/components/BarChartVisualizer";
+  import BarChartD3 from "@/components/BarChartD3";
   import TableEmployees from "@/components/TableEmployees.vue";
   const d3 = require('d3');
 
@@ -53,12 +55,26 @@
 export default {
   name: 'HomePage',
   components:{
-    BarChartVisualizer,
-    TableEmployees
+    BarChartD3,
+    TableEmployees,
   },
   data: function(){
     return{
-      numbers:[2,8,12,3,5],
+      numbers:[
+        {letter: 'A', frequency: 70},
+        {letter: 'B', frequency: 3},
+        {letter: 'C', frequency: 21},
+        {letter: 'D', frequency: 6},
+      ],
+      opts: {
+                x: d => d.letter,
+                y: d => d.frequency,
+                yLabel: "↑ Frequency",
+                xLabel: "Letter",
+                width: 600,
+                height: 400,
+                color: "teal"
+            },
       selectedLoc: 0,
       locations:[],
       selectedDayWeek: 0,
@@ -104,11 +120,11 @@ export default {
         });
   },
   methods: {
-    shuffleNumbers: function(){
-      this.numbers = d3
-      .range(Math.round(Math.random()*20))
-      .map(()=> Math.round(Math.random()*100))
-    }
+    // shuffleNumbers: function(){
+    //   this.numbers = d3
+    //   .range(Math.round(Math.random()*20))
+    //   .map(()=> Math.round(Math.random()*100))
+    // }
   },
 }
 </script>
