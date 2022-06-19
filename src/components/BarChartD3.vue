@@ -1,7 +1,6 @@
 <template>
     <div>
-        <svg id='viz' width='600' height='400'></svg>
-        <div id="bardiv"></div>
+        <svg id='viz' width='100%' height='400'></svg>
     </div>
 </template>
 
@@ -11,7 +10,6 @@
     function BarChart(data, {
         x = (d, i) => i, // given d in data, returns the (ordinal) x-value
         y = d => d, // given d in data, returns the (quantitative) y-value
-        title, // given d in data, returns the title text
         marginTop = 20, // the top margin, in pixels
         marginRight = 0, // the right margin, in pixels
         marginBottom = 30, // the bottom margin, in pixels
@@ -46,22 +44,7 @@
         const xAxis = d3.axisBottom(xScale).tickSizeOuter(0);
         const yAxis = d3.axisLeft(yScale).ticks(height / 40, yFormat);
 
-        // Compute titles.
-        if (title === undefined) {
-            const formatValue = yScale.tickFormat(100, yFormat);
-            title = i => `${X[i]}\n${formatValue(Y[i])}`;
-        } else {
-            const O = d3.map(data, d => d);
-            const T = title;
-            title = i => T(O[i], i, data);
-        }
-
-        // const svg = d3.create("svg")
-        //     .attr("width", width)
-        //     .attr("height", height)
-        //     .attr("viewBox", [0, 0, width, height])
-        //     .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
-
+        document.getElementById('viz').innerHTML="";
         const svg = d3.select("#viz");
 
         svg.append("g")
@@ -78,7 +61,7 @@
                 .attr("text-anchor", "start")
                 .text(yLabel));
 
-        const bar = svg.append("g")
+        svg.append("g")
             .attr("fill", color)
             .selectAll("rect")
             .data(I)
@@ -87,9 +70,6 @@
             .attr("y", i => yScale(Y[i]))
             .attr("height", i => yScale(0) - yScale(Y[i]))
             .attr("width", xScale.bandwidth());
-
-        if (title) bar.append("title")
-            .text(title);
 
         svg.append("g")
             .attr("transform", `translate(0,${height - marginBottom})`)

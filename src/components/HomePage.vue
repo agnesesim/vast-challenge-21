@@ -7,7 +7,7 @@
         label="Location"
         label-for="input-1"
         >
-        <b-form-select id="input-1" @change="refreshData" v-model="selectedLoc" :options="locations"></b-form-select>
+        <b-form-select id="input-1" @change="refreshFreq" v-model="selectedLoc" :options="locations"></b-form-select>
       </b-form-group>
     </b-col>
     <b-col sm="12" md="4">
@@ -16,7 +16,7 @@
         label="Day of the Week"
         label-for="input-2"
         >
-        <b-form-select id="input-2" v-model="selectedDayWeek" :options="dayWeek"></b-form-select>
+        <b-form-select id="input-2"  @change="refreshFreq" v-model="selectedDayWeek" :options="dayWeek"></b-form-select>
       </b-form-group>
     </b-col>
     <b-col sm="12" md="4">
@@ -30,7 +30,6 @@
     </b-col>
   </b-row>
   <b-row class="mb-3">
-    <b-card-group deck>
       <b-col sm="12" md="8">
         <b-card 
           border-variant="info" 
@@ -39,20 +38,28 @@
           header-border-variant="info"
           header-text-variant="info"
         >
-          <BarChartD3 :data_source="cc_data" :options="opts"></BarChartD3>
+          <BarChartD3 :data_source="cc_freq" :options="opts"></BarChartD3>
         </b-card>
       </b-col>
       <b-col sm="12" md="4">
-        <b-card
-          border-variant="danger"
-          header="Danger"
-          header-border-variant="danger"
-          header-text-variant="danger"
-          align="center"
-        >
+          <b-card no-body 
+            border-variant="danger"
+            header="Danger"
+            header-border-variant="danger"
+            header-text-variant="danger"
+            align="center"
+          >
+          <b-card-body>
+            The last four numbers of the most used credit cards, following the filters
+          </b-card-body>
+          <b-list-group flush>
+            <b-list-group-item href="#">Cras justo odio</b-list-group-item>
+            <b-list-group-item href="#">Dapibus ac facilisis in</b-list-group-item>
+            <b-list-group-item href="#">Vestibulum at eros</b-list-group-item>
+          </b-list-group>
+
         </b-card>
       </b-col>
-    </b-card-group>
   </b-row>
   <b-row>
     <b-col col lg="12" sm="12">
@@ -70,39 +77,6 @@
 
   const d3 = require('d3');
 
-  function LoadCCData(location_selected,weekday_selected){
-    var ccdata = [];
-    d3.csv("/data/credit-cards-data.csv", function(d) {
-         return {
-          location_id : d.location_id,
-          weekday : +d.weekday,
-          hour : +d.hour,
-          day : d.day
-        };
-      }).then(function(data){
-        data.filter( function(d){
-          if (location_selected == 0 || d["location_id"] == location_selected) 
-              { 
-                return d; 
-              } 
-        }).filter( function(d){
-          if (weekday_selected == 0 || d["weekday"] == weekday_selected) 
-              { 
-                return d; 
-              } 
-        });
-
-        var datagroup = nest()
-          .key(function(d) { return d.weekday; })
-          .rollup(function(v) { return v.length; })
-          .entries(data);
-
-         ccdata = datagroup;
-      });
-      
-     return ccdata; 
-  }
-
 export default {
   name: 'HomePage',
   components:{
@@ -111,12 +85,11 @@ export default {
   },
   data: function(){
     return{
-      cc_data:[],
+      cc_freq:[],
+      cc_number: [],
       opts: {
                 x: d => d.key,
                 y: d => d.value,
-                yLabel: "↑ Frequency",
-                xLabel: "Letter",
                 width: 600,
                 height: 400,
                 color: "teal"
@@ -165,47 +138,85 @@ export default {
       this.days = ds;
     });
 
-    this.refreshData();
-
-    this.prova();
+    this.refreshFreq();
   },
   methods: {
-    prova: function(){
-    },
-    refreshData: function(){
-      this.cc_data = LoadCCData(this.selectedLoc, this.selectedDayWeek);
+    refreshFreq: async function(){
+      var location_selected = this.selectedLoc;
+      var weekday_selected = this.selectedDayWeek;
 
-      // var location_selected = this.selectedLoc;
-      // var weekday_selected = this.selectedDayWeek;
+      var datasource = await d3.csv("/data/credit-cards-data.csv", function(d) {
+         return {
+          location_id : d.location_id,
+          weekday_id : +d.weekday_id,
+          weekday : d.weekday,
+          hour : +d.hour,
+          day : d.day
+        };
+      }).then(function(data){
+        data = data.filter( function(d){
+          if (location_selected == 0 || d["location_id"] == location_selected) 
+              { 
+                return d; 
+              } 
+        }).filter( function(d){
+          if (weekday_selected == 0 || d["weekday_id"] == weekday_selected) 
+              { 
+                return d; 
+              } 
+        });
+        var datagroup = nest()
+          .key(function(d) { if (weekday_selected == 0) return d.weekday;
+            else return d.hour })
+          .rollup(function(v) { return v.length; })
+          .entries(data);
+          
+        return datagroup;
+      });
 
-      // this.cc_data = 
-      // d3.csv("/data/credit-cards-data.csv", function(d) {
-      //    return {
-      //     location_id : d.location_id,
-      //     weekday : +d.weekday,
-      //     hour : +d.hour,
-      //     day : d.day
-      //   };
-      // }).then(function(data){
-      //   data.filter( function(d){
-      //     if (location_selected == 0 || d["location_id"] == location_selected) 
-      //         { 
-      //           return d; 
-      //         } 
-      //   }).filter( function(d){
-      //     if (weekday_selected == 0 || d["weekday"] == weekday_selected) 
-      //         { 
-      //           return d; 
-      //         } 
-      //   });
+      var fulldata = [];
+      if (weekday_selected == 0){
+        fulldata = [
+          {key: 'MON', value:0},
+          {key: 'TUE', value:0},
+          {key: 'WED', value:0},
+          {key: 'THU', value:0},
+          {key: 'FRI', value:0},
+          {key: 'SAT', value:0},
+          {key: 'SUN', value:0},
+        ]
+      }
+      else {
+        fulldata = [
+          {key: 3, value:0},
+          {key: 4, value:0},
+          {key: 5, value:0},
+          {key: 6, value:0},
+          {key: 7, value:0},
+          {key: 8, value:0},
+          {key: 9, value:0},
+          {key: 10, value:0},
+          {key: 11, value:0},
+          {key: 12, value:0},
+          {key: 13, value:0},
+          {key: 14, value:0},
+          {key: 15, value:0},
+          {key: 16, value:0},
+          {key: 17, value:0},
+          {key: 18, value:0},
+          {key: 19, value:0},
+          {key: 20, value:0},
+          {key: 21, value:0},
+          {key: 22, value:0}
+        ]
+      }
+        datasource.forEach(function(obj){
+          var objIndex = fulldata.findIndex((o => o.key == obj.key));
+          fulldata[objIndex].value = obj.value;
+        })
+      
 
-      //   var datagroup = nest()
-      //     .key(function(d) { return d.weekday; })
-      //     .rollup(function(v) { return v.length; })
-      //     .entries(data);
-
-      //    return datagroup;
-      // });
+      this.cc_freq = fulldata;
     },
   }
   
