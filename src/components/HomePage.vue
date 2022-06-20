@@ -7,7 +7,7 @@
         label="Location"
         label-for="input-1"
         >
-        <b-form-select id="input-1" @change="refreshFreq" v-model="selectedLoc" :options="locations"></b-form-select>
+        <b-form-select id="input-1" @change="refresh" v-model="selectedLoc" :options="locations"></b-form-select>
       </b-form-group>
     </b-col>
     <b-col sm="12" md="4">
@@ -16,7 +16,7 @@
         label="Day of the Week"
         label-for="input-2"
         >
-        <b-form-select id="input-2"  @change="refreshFreq" v-model="selectedDayWeek" :options="dayWeek"></b-form-select>
+        <b-form-select id="input-2"  @change="refresh" v-model="selectedDayWeek" :options="dayWeek"></b-form-select>
       </b-form-group>
     </b-col>
     <b-col sm="12" md="4">
@@ -52,12 +52,12 @@
           <b-card-body>
             The last four numbers of the most used credit cards, following the filters
           </b-card-body>
-          <b-list-group flush>
-            <b-list-group-item href="#">Cras justo odio</b-list-group-item>
-            <b-list-group-item href="#">Dapibus ac facilisis in</b-list-group-item>
-            <b-list-group-item href="#">Vestibulum at eros</b-list-group-item>
+          <b-list-group>
+            <b-list-group-item v-for="num in cc_number" :key="num.key" class="d-flex justify-content-between align-items-center">
+              **** **** **** {{num.key}}
+              <b-badge variant="info">{{num.value}}</b-badge>
+            </b-list-group-item>
           </b-list-group>
-
         </b-card>
       </b-col>
   </b-row>
@@ -138,7 +138,7 @@ export default {
       this.days = ds;
     });
 
-    this.refreshFreq();
+    this.refresh();
   },
   methods: {
     refreshFreq: async function(){
@@ -210,17 +210,60 @@ export default {
           {key: 22, value:0}
         ]
       }
-        datasource.forEach(function(obj){
-          var objIndex = fulldata.findIndex((o => o.key == obj.key));
-          fulldata[objIndex].value = obj.value;
-        })
-      
-
+      datasource.forEach(function(obj){
+        var objIndex = fulldata.findIndex((o => o.key == obj.key));
+        fulldata[objIndex].value = obj.value;
+      });
       this.cc_freq = fulldata;
     },
+     refreshNum: async function(){
+      var location_selected = this.selectedLoc;
+      var weekday_selected = this.selectedDayWeek;
+
+      var datasource = await d3.csv("/data/credit-cards-data.csv", function(d) {
+         return {
+          location_id : d.location_id,
+          weekday_id : +d.weekday_id,
+          day : d.day,
+          number: d.last4ccnum
+        };
+      }).then(function(data){
+        data = data.filter( function(d){
+          if (location_selected == 0 || d["location_id"] == location_selected) 
+              { 
+                return d; 
+              } 
+        }).filter( function(d){
+          if (weekday_selected == 0 || d["weekday_id"] == weekday_selected) 
+              { 
+                return d; 
+              } 
+        });
+        var datagroup = nest()
+          .key(function(d) { return d.number;})
+          .rollup(function(v) { return v.length; })
+          .entries(data); 
+          
+        datagroup = datagroup.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+
+        return datagroup;
+      });
+
+      this.cc_number = datasource;
+    },
+    refresh: function() {
+      this.refreshFreq();
+      this.refreshNum();
+    }
   }
-  
 }
 </script>
 
-
+<style scoped>
+.list-group{
+    max-height: 340px;
+    margin-bottom: 10px;
+    overflow:scroll;
+    -webkit-overflow-scrolling: touch;
+}
+</style>
