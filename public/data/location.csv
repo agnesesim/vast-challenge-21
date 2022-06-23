@@ -1,36 +1,35 @@
-name,id
-All,0
-Stewart and Sons Fabrication,1
-Gelatogalore,2
-Frank's Fuel,3
-Carlyle Chemical Inc.,4
-Abila Airport,5
-Abila Scrapyard,6
-Kronos Pipe and Irrigation,7
-Frydos Autosupply n' More,8
-Shoppers' Delight,9
-Bean There Done That,10
-Chostus Hotel,11
-Coffee Shack,12
-Ouzeri Elian,13
-Nationwide Refinery,14
-Kronos Mart,15
-Roberts and Sons,16
-Kalami Kafenion,17
-Abila Zacharo,18
-Jack's Magical Beans,19
-Hippokampos,20
-Guy's Gyros,21
-Albert's Fine Clothing,22
-Daily Dealz,23
-General Grocer,24
-Octavio's Office Supplies,25
-Hallowed Grounds,26
-Brew've Been Served,27
-Coffee Cameleon,28
-Desafio Golf Course,29
-Katerinas Café,30
-Brewed Awakenings,31
-Maximum Iron and Steel,32
-Ahaggo Museum,33
-U-Pump,34
+name,id,popularity
+Ouzeri Elian,1,87
+Brewed Awakenings,2,30
+Hallowed Grounds,3,92
+Roberts and Sons,4,8
+Shoppers' Delight,5,20
+Abila Airport,6,25
+Carlyle Chemical Inc.,7,19
+Kronos Pipe and Irrigation,8,6
+Frank's Fuel,9,2
+Maximum Iron and Steel,10,6
+Katerinas Café,11,212
+Ahaggo Museum,12,6
+Kronos Mart,13,10
+Nationwide Refinery,14,24
+Hippokampos,15,171
+Coffee Shack,16,8
+Stewart and Sons Fabrication,17,18
+Albert's Fine Clothing,18,25
+Frydos Autosupply n' More,19,47
+Desafio Golf Course,20,8
+Abila Zacharo,21,72
+Guy's Gyros,22,158
+Gelatogalore,23,64
+General Grocer,24,10
+Kalami Kafenion,25,64
+Octavio's Office Supplies,26,4
+Jack's Magical Beans,27,37
+Coffee Cameleon,28,38
+U-Pump,29,2
+Chostus Hotel,30,9
+Brew've Been Served,31,156
+Bean There Done That,32,47
+Daily Dealz,33,1
+Abila Scrapyard,34,4

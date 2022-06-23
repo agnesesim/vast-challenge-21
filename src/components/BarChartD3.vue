@@ -1,11 +1,14 @@
 <template>
     <div>
-        <svg id='viz' width='100%' height='400'></svg>
+        <svg id='viz' width='100%' height='400'>
+            <span>prevent error</span>
+            </svg>
     </div>
 </template>
 
 <script>
     const d3 = require('d3');
+    import $ from 'jquery';
 
     function BarChart(data, {
         x = (d, i) => i, // given d in data, returns the (ordinal) x-value
@@ -44,9 +47,9 @@
         const xAxis = d3.axisBottom(xScale).tickSizeOuter(0);
         const yAxis = d3.axisLeft(yScale).ticks(height / 40, yFormat);
 
-        document.getElementById('viz').innerHTML="";
+        $('#viz').empty();
         const svg = d3.select("#viz");
-
+        
         svg.append("g")
             .attr("transform", `translate(${marginLeft},0)`)
             .call(yAxis)

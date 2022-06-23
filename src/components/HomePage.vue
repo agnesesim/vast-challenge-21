@@ -1,6 +1,6 @@
 <template>
 <b-container class="bv-example-row">
-  <b-row class="mt-3">
+  <b-row class="m-2">
     <b-col sm="12" md="4">
       <b-form-group
         id="fieldset-1"
@@ -29,11 +29,28 @@
       </b-form-group>
     </b-col>
   </b-row>
-  <b-row class="mb-3">
-      <b-col sm="12" md="8">
+  <b-row class="m-2">
+    <b-col sm="12" md="3">
+      <b-card no-body 
+        header="Locations"
+        header-border-variant="info"
+        header-text-variant="info"
+        align="center"
+      >
+        <b-list-group>
+          <b-list-group-item v-for="loc in locations" :id="loc.value" :key="loc.value" class="d-flex justify-content-between align-items-center locList" @click="changeLocation(loc.value)">
+            {{loc.text}}
+            <b-badge v-if="loc.pop > 150" variant="danger">very popular</b-badge>
+            <b-badge v-else-if="loc.pop >= 20" variant="warning">popular</b-badge>
+            <b-badge v-else-if="loc.pop < 20" variant="info">unpopular</b-badge>
+            <!-- <b-badge variant="info">{{loc.pop}}</b-badge> -->
+          </b-list-group-item>
+        </b-list-group>
+      </b-card>
+    </b-col>
+      <b-col sm="12" md="6">
         <b-card 
-          border-variant="info" 
-          header="Info" 
+          header="Days and Hours frequented" 
           align="center"
           header-border-variant="info"
           header-text-variant="info"
@@ -41,17 +58,13 @@
           <BarChartD3 :data_source="cc_freq" :options="opts"></BarChartD3>
         </b-card>
       </b-col>
-      <b-col sm="12" md="4">
+      <b-col sm="12" md="3">
           <b-card no-body 
-            border-variant="danger"
-            header="Danger"
+            header="Credit Card used"
             header-border-variant="danger"
             header-text-variant="danger"
             align="center"
           >
-          <b-card-body>
-            The last four numbers of the most used credit cards, following the filters
-          </b-card-body>
           <b-list-group>
             <b-list-group-item v-for="num in cc_number" :key="num.key" class="d-flex justify-content-between align-items-center">
               **** **** **** {{num.key}}
@@ -61,18 +74,19 @@
         </b-card>
       </b-col>
   </b-row>
-  <b-row>
+  <!-- <b-row>
     <b-col col lg="12" sm="12">
       <TableEmployees></TableEmployees>
     </b-col>
-  </b-row>
+  </b-row> -->
 </b-container>
 </template>
 
 
 <script>
   import BarChartD3 from "@/components/BarChartD3";
-  import TableEmployees from "@/components/TableEmployees.vue";
+  // import TableEmployees from "@/components/TableEmployees.vue";
+  import $ from 'jquery';
   import {nest} from 'd3-collection';
 
   const d3 = require('d3');
@@ -81,7 +95,7 @@ export default {
   name: 'HomePage',
   components:{
     BarChartD3,
-    TableEmployees,
+    // TableEmployees,
   },
   data: function(){
     return{
@@ -92,9 +106,10 @@ export default {
                 y: d => d.value,
                 width: 600,
                 height: 400,
-                color: "teal"
+                color: "teal",
+                yDomain: [0,40]
             },
-      selectedLoc: 0,
+      selectedLoc: 11,
       locations:[],
       selectedDayWeek: 0,
       dayWeek:[
@@ -119,9 +134,11 @@ export default {
           var l = {
             value: rows[i].id,
             text: rows[i].name,
+            pop: rows[i].popularity
           }
           locs.push(l);
       }
+      locs = locs.sort((a, b) => parseFloat(b.pop) - parseFloat(a.pop));
       this.locations = locs;
     });
         
@@ -141,6 +158,13 @@ export default {
     this.refresh();
   },
   methods: {
+    changeLocation: function(locID){
+      $('.locList').removeClass('active');  
+      $('#' + locID).addClass('active');
+
+      this.selectedLoc = locID;
+      this.refresh();
+    },
     refreshFreq: async function(){
       var location_selected = this.selectedLoc;
       var weekday_selected = this.selectedDayWeek;
@@ -154,6 +178,10 @@ export default {
           day : d.day
         };
       }).then(function(data){
+        console.log("before-"+data.length);
+        console.log("loc:" + location_selected);
+        console.log("wek:" + weekday_selected);
+
         data = data.filter( function(d){
           if (location_selected == 0 || d["location_id"] == location_selected) 
               { 
@@ -165,6 +193,8 @@ export default {
                 return d; 
               } 
         });
+
+        console.log("after-"+data.length);
         var datagroup = nest()
           .key(function(d) { if (weekday_selected == 0) return d.weekday;
             else return d.hour })
@@ -261,9 +291,18 @@ export default {
 
 <style scoped>
 .list-group{
-    max-height: 340px;
+    max-height: 450px;
     margin-bottom: 10px;
     overflow:scroll;
     -webkit-overflow-scrolling: touch;
+    margin: 0px;
+    padding:0px !important;
+}
+
+.locList .activa{
+  background-color: teal !important;
+}
+.container{
+  max-width: 1600px;
 }
 </style>
