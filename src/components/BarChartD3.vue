@@ -1,7 +1,6 @@
 <template>
     <div>
-        <svg id='viz' width='100%' height='400'>
-            <span>prevent error</span>
+        <svg :id="this.idSvg" width='100%' height='400'>
             </svg>
     </div>
 </template>
@@ -28,7 +27,9 @@
         yFormat, // a format specifier string for the y-axis
         yLabel, // a label for the y-axis
         color = "currentColor" // bar fill color
-        } = {}) {
+        } = {},
+        id
+        ) {
         // Compute values.
         const X = d3.map(data, x);
         const Y = d3.map(data, y);
@@ -47,8 +48,8 @@
         const xAxis = d3.axisBottom(xScale).tickSizeOuter(0);
         const yAxis = d3.axisLeft(yScale).ticks(height / 40, yFormat);
 
-        $('#viz').empty();
-        const svg = d3.select("#viz");
+        $('#'+id).empty();
+        const svg = d3.select('#'+id);
         
         svg.append("g")
             .attr("transform", `translate(${marginLeft},0)`)
@@ -69,10 +70,11 @@
             .selectAll("rect")
             .data(I)
             .join("rect")
-            .attr("x", i => xScale(X[i]))
+            .attr("x", i => xScale(X[i]) +  xScale.bandwidth()/2 - 12)
             .attr("y", i => yScale(Y[i]))
+            .attr("rx", 10)
             .attr("height", i => yScale(0) - yScale(Y[i]))
-            .attr("width", xScale.bandwidth());
+            .attr("width", 25);
 
         svg.append("g")
             .attr("transform", `translate(0,${height - marginBottom})`)
@@ -86,10 +88,14 @@
         props:{
             data_source: Array,
             options: Object,
+            idSvg: {
+                type: String,
+                default: 'idDiDefault'
+            }
         },
         data: function(){
             return {
-                chart: BarChart(this.data_source, this.options)
+                chart: BarChart(this.data_source, this.options, this.idSvg),
             }
         },
         mounted(){
@@ -97,7 +103,7 @@
         },
         methods:{
           refreshPlot: function(){
-            this.chart = BarChart(this.data_source, this.options )
+            this.chart = BarChart(this.data_source, this.options, this.idSvg)
           }
         },
         watch:{

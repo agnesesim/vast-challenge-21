@@ -1,6 +1,6 @@
 <template>
 <b-container class="bv-example-row">
-  <b-row class="m-2">
+  <!-- <b-row class="m-2">
     <b-col sm="12" md="4">
       <b-form-group
         id="fieldset-1"
@@ -28,8 +28,8 @@
         <b-form-select id="input-3" v-model="selectedDay" :options="days"></b-form-select>
       </b-form-group>
     </b-col>
-  </b-row>
-  <b-row class="m-2">
+  </b-row> -->
+  <b-row class="m-3">
     <b-col sm="12" md="3">
       <b-card no-body 
         header="Locations"
@@ -42,50 +42,65 @@
             {{loc.text}}
             <b-badge v-if="loc.pop > 150" variant="danger">very popular</b-badge>
             <b-badge v-else-if="loc.pop >= 20" variant="warning">popular</b-badge>
-            <b-badge v-else-if="loc.pop < 20" variant="info">unpopular</b-badge>
-            <!-- <b-badge variant="info">{{loc.pop}}</b-badge> -->
+            <b-badge v-else-if="loc.pop < 20" variant="success">unpopular</b-badge>
           </b-list-group-item>
         </b-list-group>
       </b-card>
     </b-col>
-      <b-col sm="12" md="6">
-        <b-card 
-          header="Days and Hours frequented" 
-          align="center"
+    <b-col sm="12" md="6">
+      <b-card 
+        header="Popular days" 
+        align="center"
+        header-border-variant="info"
+        header-text-variant="info"
+        style="height:235px;margin-bottom:10px;"
+      >
+        <BarChartD3 :idSvg="'cc_freq_day'" :data_source="cc_freq_day" :options="option_day"></BarChartD3>
+      </b-card>
+      <b-card 
+        header="Popular hours" 
+        align="center"
+        header-border-variant="info"
+        header-text-variant="info"
+        style="height:260px"
+      >
+            <b-form-radio-group
+        id="btn-radios-2"
+        v-model="selectedDayWeek"
+        :options="dayWeek"
+        :aria-describedby="ariaDescribedby"
+        button-variant="outline-info"
+        size="sm"
+        name="radio-btn-outline"
+        buttons
+        @change="refresh"
+      ></b-form-radio-group>
+        <BarChartD3 :idSvg="'cc_freq_hour'" :data_source="cc_freq_hour" :options="option_hour"></BarChartD3>
+      </b-card>
+    </b-col>
+    <b-col sm="12" md="3">
+        <b-card no-body 
+          header="Credit Card used"
           header-border-variant="info"
           header-text-variant="info"
+          align="center"
         >
-          <BarChartD3 :data_source="cc_freq" :options="opts"></BarChartD3>
-        </b-card>
-      </b-col>
-      <b-col sm="12" md="3">
-          <b-card no-body 
-            header="Credit Card used"
-            header-border-variant="danger"
-            header-text-variant="danger"
-            align="center"
-          >
-          <b-list-group>
-            <b-list-group-item v-for="num in cc_number" :key="num.key" class="d-flex justify-content-between align-items-center">
-              **** **** **** {{num.key}}
-              <b-badge variant="info">{{num.value}}</b-badge>
-            </b-list-group-item>
-          </b-list-group>
-        </b-card>
-      </b-col>
-  </b-row>
-  <!-- <b-row>
-    <b-col col lg="12" sm="12">
-      <TableEmployees></TableEmployees>
+        <b-list-group>
+          <b-list-group-item v-for="num in cc_number" :id="num.key" :key="num.key" class="d-flex justify-content-between align-items-center numList"  @click="changeCCNumber(num.key)">
+            **** **** **** {{num.key}}
+            <b-badge variant="info">{{num.value}}</b-badge>
+          </b-list-group-item>
+        </b-list-group>
+      </b-card>
     </b-col>
-  </b-row> -->
+  </b-row>
 </b-container>
 </template>
 
 
 <script>
   import BarChartD3 from "@/components/BarChartD3";
-  // import TableEmployees from "@/components/TableEmployees.vue";
+  // import StackedBarChartD3 from "@/components/StackedBarChartD3";
   import $ from 'jquery';
   import {nest} from 'd3-collection';
 
@@ -95,20 +110,13 @@ export default {
   name: 'HomePage',
   components:{
     BarChartD3,
-    // TableEmployees,
+    // StackedBarChartD3
   },
   data: function(){
     return{
-      cc_freq:[],
+      cc_all:[],
       cc_number: [],
-      opts: {
-                x: d => d.key,
-                y: d => d.value,
-                width: 600,
-                height: 400,
-                color: "teal",
-                yDomain: [0,40]
-            },
+      selectedNum: 0,
       selectedLoc: 11,
       locations:[],
       selectedDayWeek: 0,
@@ -124,9 +132,27 @@ export default {
       ],
       selectedDay: '01/01/1900',
       days:[],
+      cc_freq_day:[],
+      cc_freq_hour:[],
+      option_day: {
+          x: d => d.key,
+          y: d => d.value,
+          width: 600,
+          height: 160,
+          color: '#11CFB4',
+          yDomain: [0,40]
+      },
+      option_hour: {
+          x: d => d.key,
+          y: d => d.value,
+          width: 600,
+          height: 160,
+          color: '#1183CF',
+          //yDomain: this.selectedDayWeek == 0 ? [0, 100] : [0,50]
+      },
     }
   },
-  mounted() {
+  async mounted () {
     d3.csv("/data/location.csv")
     .then((rows) => {
       var locs = []
@@ -155,6 +181,23 @@ export default {
       this.days = ds;
     });
 
+    this.cc_all = await d3.csv("/data/credit-cards-data.csv")
+    .then((rows) => {
+      var cc = []
+      for(var i = 0; i < rows.length; i++){
+          var d = {
+            location_id: rows[i].location_id,
+            weekday_id: +rows[i].weekday_id,
+            weekday: rows[i].weekday,
+            hour: +rows[i].hour,
+            day: rows[i].day,
+            number: rows[i].last4ccnum
+          }
+          cc.push(d);
+      }
+      return cc;
+    });
+    
     this.refresh();
   },
   methods: {
@@ -165,124 +208,107 @@ export default {
       this.selectedLoc = locID;
       this.refresh();
     },
-    refreshFreq: async function(){
-      var location_selected = this.selectedLoc;
-      var weekday_selected = this.selectedDayWeek;
+    changeCCNumber: function(numID){
+      $('.numList').removeClass('active');  
+      $('#' + numID).addClass('active');
 
-      var datasource = await d3.csv("/data/credit-cards-data.csv", function(d) {
-         return {
-          location_id : d.location_id,
-          weekday_id : +d.weekday_id,
-          weekday : d.weekday,
-          hour : +d.hour,
-          day : d.day
-        };
-      }).then(function(data){
-        console.log("before-"+data.length);
-        console.log("loc:" + location_selected);
-        console.log("wek:" + weekday_selected);
+      this.selectedNum = numID;
+      this.refresh();
+    },
+    filterFreqDay: function(){
+      var location = this.selectedLoc;
+      var data = this.cc_all;
 
-        data = data.filter( function(d){
-          if (location_selected == 0 || d["location_id"] == location_selected) 
-              { 
-                return d; 
-              } 
-        }).filter( function(d){
-          if (weekday_selected == 0 || d["weekday_id"] == weekday_selected) 
-              { 
-                return d; 
-              } 
-        });
-
-        console.log("after-"+data.length);
-        var datagroup = nest()
-          .key(function(d) { if (weekday_selected == 0) return d.weekday;
-            else return d.hour })
-          .rollup(function(v) { return v.length; })
-          .entries(data);
-          
-        return datagroup;
+      var data_filtered = data.filter( function(d){
+        if (location == 0 || d["location_id"] == location) { return d; } 
       });
 
-      var fulldata = [];
-      if (weekday_selected == 0){
-        fulldata = [
-          {key: 'MON', value:0},
-          {key: 'TUE', value:0},
-          {key: 'WED', value:0},
-          {key: 'THU', value:0},
-          {key: 'FRI', value:0},
-          {key: 'SAT', value:0},
-          {key: 'SUN', value:0},
-        ]
-      }
-      else {
-        fulldata = [
-          {key: 3, value:0},
-          {key: 4, value:0},
-          {key: 5, value:0},
-          {key: 6, value:0},
-          {key: 7, value:0},
-          {key: 8, value:0},
-          {key: 9, value:0},
-          {key: 10, value:0},
-          {key: 11, value:0},
-          {key: 12, value:0},
-          {key: 13, value:0},
-          {key: 14, value:0},
-          {key: 15, value:0},
-          {key: 16, value:0},
-          {key: 17, value:0},
-          {key: 18, value:0},
-          {key: 19, value:0},
-          {key: 20, value:0},
-          {key: 21, value:0},
-          {key: 22, value:0}
-        ]
-      }
-      datasource.forEach(function(obj){
+      var data_grouped = nest()
+        .key(function(d) { return d.weekday; })
+        .rollup(function(v) { return v.length; })
+        .entries(data_filtered);
+    
+      var fulldata = [
+        {key: 'MON', value:0},
+        {key: 'TUE', value:0},
+        {key: 'WED', value:0},
+        {key: 'THU', value:0},
+        {key: 'FRI', value:0},
+        {key: 'SAT', value:0},
+        {key: 'SUN', value:0},
+      ]
+      
+      data_grouped.forEach(function(obj){
         var objIndex = fulldata.findIndex((o => o.key == obj.key));
         fulldata[objIndex].value = obj.value;
       });
-      this.cc_freq = fulldata;
+
+      this.cc_freq_day = fulldata;
     },
-     refreshNum: async function(){
-      var location_selected = this.selectedLoc;
-      var weekday_selected = this.selectedDayWeek;
+    filterFreqHour: function(){
+      var location = this.selectedLoc;
+      var weekday = this.selectedDayWeek;
+      var data = this.cc_all;
 
-      var datasource = await d3.csv("/data/credit-cards-data.csv", function(d) {
-         return {
-          location_id : d.location_id,
-          weekday_id : +d.weekday_id,
-          day : d.day,
-          number: d.last4ccnum
-        };
-      }).then(function(data){
-        data = data.filter( function(d){
-          if (location_selected == 0 || d["location_id"] == location_selected) 
-              { 
-                return d; 
-              } 
-        }).filter( function(d){
-          if (weekday_selected == 0 || d["weekday_id"] == weekday_selected) 
-              { 
-                return d; 
-              } 
-        });
-        var datagroup = nest()
-          .key(function(d) { return d.number;})
-          .rollup(function(v) { return v.length; })
-          .entries(data); 
-          
-        datagroup = datagroup.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
-
-        return datagroup;
+      var data_filtered = data.filter( function(d){
+        return (location == 0 || d.location_id == location) && (weekday == 0 || d["weekday_id"] == weekday); 
       });
 
-      this.cc_number = datasource;
+      var data_grouped = nest()
+        .key(function(d) { return d.hour; })
+        .rollup(function(v) { return v.length; })
+        .entries(data_filtered);
+    
+      var fulldata = [
+        {key: 3, value:0},
+        {key: 4, value:0},
+        {key: 5, value:0},
+        {key: 6, value:0},
+        {key: 7, value:0},
+        {key: 8, value:0},
+        {key: 9, value:0},
+        {key: 10, value:0},
+        {key: 11, value:0},
+        {key: 12, value:0},
+        {key: 13, value:0},
+        {key: 14, value:0},
+        {key: 15, value:0},
+        {key: 16, value:0},
+        {key: 17, value:0},
+        {key: 18, value:0},
+        {key: 19, value:0},
+        {key: 20, value:0},
+        {key: 21, value:0},
+        {key: 22, value:0}
+      ]
+      
+      data_grouped.forEach(function(obj){
+        var objIndex = fulldata.findIndex((o => o.key == obj.key));
+        fulldata[objIndex].value = obj.value;
+      });
+
+      this.cc_freq_hour = fulldata;
+    },
+     refreshNum: function(){
+      var location = this.selectedLoc;
+      var weekday = this.selectedDayWeek;
+      var data = this.cc_all;
+
+      var data_filtered = data.filter( function(d){
+        return (location == 0 || d.location_id == location) && (weekday == 0 || d["weekday_id"] == weekday); 
+      });
+
+      var data_grouped = nest()
+        .key(function(d) { return d.number;})
+        .rollup(function(v) { return v.length; })
+        .entries(data_filtered); 
+        
+      data_grouped = data_grouped.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+      this.cc_number = data_grouped;
     },
     refresh: function() {
-      this.refreshFreq();
+      this.filterFreqDay();
+      this.filterFreqHour();
       this.refreshNum();
     }
   }
