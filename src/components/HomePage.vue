@@ -1,34 +1,6 @@
 <template>
 <b-container class="bv-example-row">
-  <!-- <b-row class="m-2">
-    <b-col sm="12" md="4">
-      <b-form-group
-        id="fieldset-1"
-        label="Location"
-        label-for="input-1"
-        >
-        <b-form-select id="input-1" @change="refresh" v-model="selectedLoc" :options="locations"></b-form-select>
-      </b-form-group>
-    </b-col>
-    <b-col sm="12" md="4">
-      <b-form-group
-        id="fieldset-2"
-        label="Day of the Week"
-        label-for="input-2"
-        >
-        <b-form-select id="input-2"  @change="refresh" v-model="selectedDayWeek" :options="dayWeek"></b-form-select>
-      </b-form-group>
-    </b-col>
-    <b-col sm="12" md="4">
-       <b-form-group
-        id="fieldset-3"
-        label="Specific day"
-        label-for="input-3"
-        >
-        <b-form-select id="input-3" v-model="selectedDay" :options="days"></b-form-select>
-      </b-form-group>
-    </b-col>
-  </b-row> -->
+
   <b-row class="m-3">
     <b-col sm="12" md="3">
       <b-card no-body 
@@ -68,7 +40,6 @@
         id="btn-radios-2"
         v-model="selectedDayWeek"
         :options="dayWeek"
-        :aria-describedby="ariaDescribedby"
         button-variant="outline-info"
         size="sm"
         name="radio-btn-outline"
@@ -94,13 +65,56 @@
       </b-card>
     </b-col>
   </b-row>
+
+  <b-row class="m-3">
+    <b-col sm="12">
+      <b-card 
+        align="center"
+        style=";margin-bottom:10px;"
+      >
+        <div>
+          <label for="range-1">Example range with min and max</label>
+          <b-form-input id="range-1" v-model="value" type="range" min="0" max="5"></b-form-input>
+          <div class="mt-2">Value: {{ value }}</div>
+        </div>
+      </b-card>
+    </b-col>
+  </b-row>
+  <b-row class="m-3">
+    <b-col sm="12" md="9">
+      <b-card 
+        header="Abila" 
+        align="center"
+        header-border-variant="info"
+        header-text-variant="info"
+        style=";margin-bottom:10px;"
+      >
+        <MapD3></MapD3>
+      </b-card>
+    </b-col>
+    <b-col sm="12" md="3">
+        <b-card no-body 
+          header="Employees"
+          header-border-variant="info"
+          header-text-variant="info"
+          align="center"
+        >
+        <b-list-group>
+          <b-list-group-item v-for="emp in employees" :id="emp.value" :key="emp.value" class="d-flex justify-content-between align-items-center empList">
+            {{emp.text}}
+          </b-list-group-item>
+        </b-list-group>
+      </b-card>
+    </b-col>
+  </b-row>
 </b-container>
 </template>
 
 
 <script>
   import BarChartD3 from "@/components/BarChartD3";
-  // import StackedBarChartD3 from "@/components/StackedBarChartD3";
+  import MapD3 from "@/components/MapD3";
+  
   import $ from 'jquery';
   import {nest} from 'd3-collection';
 
@@ -110,12 +124,14 @@ export default {
   name: 'HomePage',
   components:{
     BarChartD3,
+    MapD3
     // StackedBarChartD3
   },
   data: function(){
     return{
       cc_all:[],
       cc_number: [],
+      employees: [],
       selectedNum: 0,
       selectedLoc: 11,
       locations:[],
@@ -137,7 +153,7 @@ export default {
       option_day: {
           x: d => d.key,
           y: d => d.value,
-          width: 600,
+          width: 400,
           height: 160,
           color: '#11CFB4',
           yDomain: [0,40]
@@ -149,7 +165,7 @@ export default {
           height: 160,
           color: '#1183CF',
           //yDomain: this.selectedDayWeek == 0 ? [0, 100] : [0,50]
-      },
+      }
     }
   },
   async mounted () {
@@ -199,6 +215,19 @@ export default {
     });
     
     this.refresh();
+
+    d3.csv("/data/car-assignments.csv")
+    .then((rows) => {
+      var emp = []
+      for(var i = 0; i < rows.length; i++){
+          var e = {
+            value: rows[i].CarID,
+            text: rows[i].LastName + ' ' + rows[i].FirstName,
+          }
+          emp.push(e);
+      }
+      this.employees = emp;
+    });
   },
   methods: {
     changeLocation: function(locID){
@@ -325,7 +354,7 @@ export default {
     padding:0px !important;
 }
 
-.locList .activa{
+.locList .active{
   background-color: teal !important;
 }
 .container{
