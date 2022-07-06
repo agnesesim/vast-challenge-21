@@ -1,7 +1,7 @@
 <template>
     <div>
         <svg id="map" width='100%' height='400'>
-            </svg>
+        </svg>
     </div>
 </template>
 
