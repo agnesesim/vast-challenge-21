@@ -7,11 +7,29 @@
         align="center"
         style=";margin-bottom:10px;"
       >
-        <div>
-          <label for="range-1">Example range with min and max</label>
-          <b-form-input id="range-1" v-model="selectedDay" type="range" min="0" max="5"></b-form-input>
-          <div class="mt-2">Value: {{ selectedDay }}</div>
-        </div>
+        <b-row>
+          <b-col md="3" sm="12">       
+            <b-form-group
+              id="fieldset-1"
+              label="Select day"
+              label-for="input-1"
+              >
+              <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="refresh"></b-form-select>
+            </b-form-group>
+          </b-col>
+          <b-col md="7" sm="12">
+            <b-form-group
+              id="fieldset-2"
+              label="Slide to change time"
+              label-for="range-1"
+              >
+              <b-form-input id="range-1" v-model="selectedTimeID" type="range" :min="minTimeID" :max="maxTimeID"></b-form-input>
+            </b-form-group>
+          </b-col>
+          <b-col md="2" sm="12">
+            <div class="mt-2"><b>{{ time[selectedTimeID] }}</b></div>
+          </b-col>
+        </b-row>
       </b-card>
     </b-col>
   </b-row>
@@ -24,7 +42,7 @@
         header-text-variant="info"
         style=";margin-bottom:10px;"
       >
-        <MapD3></MapD3>
+        <MapD3 :datetime="time[selectedTimeID]"></MapD3>
       </b-card>
     </b-col>
     <b-col sm="12" md="3">
@@ -56,24 +74,17 @@ export default {
   name: 'AboutView',
   components:{
     MapD3
-    // StackedBarChartD3
   },
   data: function(){
     return{
       employees: [],
-      selectedDayWeek: 0,
-      dayWeek:[
-        {value: 0, text: 'All'},
-        {value: 1, text: 'Monday'},
-        {value: 2, text: 'Tuesday'},
-        {value: 3, text: 'Wednesday'},
-        {value: 4, text: 'Thursday'},
-        {value: 5, text: 'Friday'},
-        {value: 6, text: 'Saturday'},
-        {value: 7, text: 'Sunday'},
-      ],
-      selectedDay: '01/01/1900',
-      days:[]
+      selectedDay: '01-06-2014',
+      days:[],
+      time_all: [],
+      time: {},
+      selectedTimeID: 1,
+      minTimeID:1,
+      maxTimeID:6407,
     }
   },
   async mounted () {
@@ -91,7 +102,26 @@ export default {
       this.days = ds;
     });
     
-    this.refresh();
+    this.time_all = await d3.csv("/data/time.csv")
+    .then((rows) => {
+      var tt = []
+      for(var i = 0; i < rows.length; i++){
+        var d = {
+          time_id: +rows[i].id,
+          timestamp: rows[i].timestamp,
+          day: rows[i].day
+        }
+        tt.push(d);
+      }
+      return tt;
+    });
+console.log(this.time_all)
+    d3.csv("/data/time.csv")
+    .then((rows) => {
+      for(var i = 0; i < rows.length; i++){
+        this.time[rows[i].id] = rows[i].timestamp
+      }
+    });
 
     d3.csv("/data/car-assignments.csv")
     .then((rows) => {
@@ -105,10 +135,27 @@ export default {
       }
       this.employees = emp;
     });
+
+    this.refresh();
   },
   methods: {
+    filterTime: function(){
+      var day = this.selectedDay;
+      var data = this.time_all;
+
+      console.log(day);
+      var data_filtered = data.filter( function(d){
+        if (day == '01-01-1900' || d["day"] == day) { return d; } 
+      });
+
+      var ids = data_filtered.map(item => item.time_id)
+
+      this.minTimeID = Math.min.apply(Math, ids) 
+      this.maxTimeID = Math.max.apply(Math, ids) 
+      this.selectedTimeID = this.minTimeID
+    },
     refresh: function() {
-     console.log('ok')
+      this.filterTime()
     }
   }
 }

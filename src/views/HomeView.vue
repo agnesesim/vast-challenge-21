@@ -36,7 +36,7 @@
         header-text-variant="info"
         style="height:260px"
       >
-            <b-form-radio-group
+      <b-form-radio-group
         id="btn-radios-2"
         v-model="selectedDayWeek"
         :options="dayWeek"
