@@ -10,30 +10,30 @@
     import $ from 'jquery';
 
     function StackedBarChart(data, {
-    x = (d, i) => i, // given d in data, returns the (ordinal) x-value
-    y = d => d, // given d in data, returns the (quantitative) y-value
-    z = () => 1, // given d in data, returns the (categorical) z-value
-    title, // given d in data, returns the title text
-    marginTop = 30, // top margin, in pixels
-    marginRight = 0, // right margin, in pixels
-    marginBottom = 30, // bottom margin, in pixels
-    marginLeft = 40, // left margin, in pixels
-    width = 640, // outer width, in pixels
-    height = 400, // outer height, in pixels
-    xDomain, // array of x-values
-    xRange = [marginLeft, width - marginRight], // [left, right]
-    xPadding = 0.1, // amount of x-range to reserve to separate bars
-    yType = d3.scaleLinear, // type of y-scale
-    yDomain, // [ymin, ymax]
-    yRange = [height - marginBottom, marginTop], // [bottom, top]
-    zDomain, // array of z-values
-    offset = d3.stackOffsetDiverging, // stack offset method
-    order = d3.stackOrderNone, // stack order method
-    yFormat, // a format specifier string for the y-axis
-    yLabel, // a label for the y-axis
-    colors = d3.schemeTableau10, // array of colors
-    } = {},
-    id
+        x = (d, i) => i, // given d in data, returns the (ordinal) x-value
+        y = d => d, // given d in data, returns the (quantitative) y-value
+        z = () => 1, // given d in data, returns the (categorical) z-value
+        title, // given d in data, returns the title text
+        marginTop = 30, // top margin, in pixels
+        marginRight = 0, // right margin, in pixels
+        marginBottom = 30, // bottom margin, in pixels
+        marginLeft = 40, // left margin, in pixels
+        width = 640, // outer width, in pixels
+        height = 400, // outer height, in pixels
+        xDomain, // array of x-values
+        xRange = [marginLeft, width - marginRight], // [left, right]
+        xPadding = 0.1, // amount of x-range to reserve to separate bars
+        yType = d3.scaleLinear, // type of y-scale
+        yDomain, // [ymin, ymax]
+        yRange = [height - marginBottom, marginTop], // [bottom, top]
+        zDomain, // array of z-values
+        offset = d3.stackOffsetDiverging, // stack offset method
+        order = d3.stackOrderNone, // stack order method
+        yFormat, // a format specifier string for the y-axis
+        yLabel, // a label for the y-axis
+        colors = d3.schemeTableau10, // array of colors
+        } = {},
+        id
     ) {
     // Compute values.
     const X = d3.map(data, x);

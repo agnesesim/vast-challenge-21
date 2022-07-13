@@ -27,7 +27,7 @@
         header-text-variant="info"
         style="height:235px;margin-bottom:10px;"
       >
-        <BarChartD3 :idSvg="'cc_freq_day'" :data_source="cc_freq_day" :options="option_day"></BarChartD3>
+        <BarChartD3 :idSvg="'freq_day'" :data_source="freq_day" :options="option_day"></BarChartD3>
       </b-card>
       <b-card 
         header="Popular hours" 
@@ -46,23 +46,41 @@
         buttons
         @change="refresh"
       ></b-form-radio-group>
-        <BarChartD3 :idSvg="'cc_freq_hour'" :data_source="cc_freq_hour" :options="option_hour"></BarChartD3>
+        <BarChartD3 :idSvg="'freq_hour'" :data_source="freq_hour" :options="option_hour"></BarChartD3>
       </b-card>
     </b-col>
     <b-col sm="12" md="3">
         <b-card no-body 
-          header="Credit Card used"
-          header-border-variant="info"
-          header-text-variant="info"
           align="center"
         >
-        <b-list-group>
-          <b-list-group-item v-for="num in cc_number" :id="num.key" :key="num.key" class="d-flex justify-content-between align-items-center numList"  @click="changeCCNumber(num.key)">
-            **** **** **** {{num.key}}
-            <b-badge variant="info">{{num.value}}</b-badge>
-          </b-list-group-item>
-        </b-list-group>
+          <b-tabs content-class="m-0 p-0" 
+            card
+            header-border-variant="info"
+            header-text-variant="info"
+          >
+            <b-tab title="Credit Cards" class="m-0 p-0" active>
+              <b-list-group>
+                <b-list-group-item v-for="num in cc_number" :id="num.key" :key="num.key" class="d-flex justify-content-between align-items-center numList"  @click="changeCCNumber(num.key)">
+                  **** **** **** {{num.key}}
+                  <b-badge variant="info">{{num.value}}</b-badge>
+                </b-list-group-item>
+              </b-list-group>
+            </b-tab>
+            <b-tab title="Loyalty Cards"  class="m-0 p-0" >
+              <b-list-group>
+                <b-list-group-item v-for="num in loy_number" :id="num.key" :key="num.key" class="d-flex justify-content-between align-items-center numList"  @click="changeCCNumber(num.key)">
+                  {{num.key}}
+                  <b-badge variant="info">{{num.value}}</b-badge>
+                </b-list-group-item>
+              </b-list-group>
+            </b-tab>
+          </b-tabs>
       </b-card>
+    </b-col>
+  </b-row>
+  <b-row>
+    <b-col sm="12">
+      <vue-horizontal-timeline :items="items" />
     </b-col>
   </b-row>
 </b-container>
@@ -71,6 +89,7 @@
 
 <script>
   import BarChartD3 from "@/components/BarChartD3";
+  import VueHorizontalTimeline from "vue-horizontal-timeline";
   
   import $ from 'jquery';
   import {nest} from 'd3-collection';
@@ -80,13 +99,16 @@
 export default {
   name: 'HomeView',
   components:{
-    BarChartD3
+    BarChartD3,
+    VueHorizontalTimeline
     // StackedBarChartD3
   },
   data: function(){
     return{
       cc_all:[],
       cc_number: [],
+      loy_all:[],
+      loy_number: [],
       selectedNum: 0,
       selectedLoc: 11,
       locations:[],
@@ -103,8 +125,8 @@ export default {
       ],
       selectedDay: '01/01/1900',
       days:[],
-      cc_freq_day:[],
-      cc_freq_hour:[],
+      freq_day:[],
+      freq_hour:[],
       option_day: {
           x: d => d.key,
           y: d => d.value,
@@ -120,7 +142,29 @@ export default {
           height: 160,
           color: '#1183CF',
           //yDomain: this.selectedDayWeek == 0 ? [0, 100] : [0,50]
+      },
+      items: [
+      {
+        title: "1939",
+        content:
+          "World War II, was a global war that lasted from 1939 to 1945. The vast majority of the world's countries—including all the great powers—eventually formed two opposing military alliances: the Allies and the Axis."
+      },
+      {
+        title: "1945",
+        content:
+          "The War in Vietnam, was a post–World War II armed conflict involving a largely British-Indian and French task force and Japanese troops from the Southern Expeditionary Army Group, versus the Vietnamese communist movement, the Viet Minh, for control of the country, after the unconditional Japanese surrender."
+      },
+      {
+        title: "1947",
+        content:
+          "The Paraguayan Civil War, also known as the Barefoot Revolution and the Second Paraguayan Civil War, was a conflict in Paraguay that lasted from March to August 1947."
+      },
+      {
+        title: "1954",
+        content:
+          "The Algerian War, was a war between France and the Algerian National Liberation Front (French: Front de Libération Nationale – FLN) from 1954 to 1962, which led to Algeria gaining its independence from France."
       }
+    ]
     }
   },
   async mounted () {
@@ -168,6 +212,23 @@ export default {
       }
       return cc;
     });
+
+    this.loy_all = await d3.csv("/data/loyalty-card-data.csv")
+    .then((rows) => {
+      var ll = []
+      for(var i = 0; i < rows.length; i++){
+          var d = {
+            location_id: rows[i].location_id,
+            weekday_id: +rows[i].weekday_id,
+            weekday: rows[i].weekday,
+            hour: +rows[i].hour,
+            day: rows[i].day,
+            number: rows[i].loyaltynum
+          }
+          ll.push(d);
+      }
+      return ll;
+    });
     
     this.refresh();
   },
@@ -186,9 +247,8 @@ export default {
       this.selectedNum = numID;
       this.refresh();
     },
-    filterFreqDay: function(){
+    filterFreqDay: function(data){
       var location = this.selectedLoc;
-      var data = this.cc_all;
 
       var data_filtered = data.filter( function(d){
         if (location == 0 || d["location_id"] == location) { return d; } 
@@ -214,12 +274,11 @@ export default {
         fulldata[objIndex].value = obj.value;
       });
 
-      this.cc_freq_day = fulldata;
+      return fulldata;
     },
-    filterFreqHour: function(){
+    filterFreqHour: function(data){
       var location = this.selectedLoc;
       var weekday = this.selectedDayWeek;
-      var data = this.cc_all;
 
       var data_filtered = data.filter( function(d){
         return (location == 0 || d.location_id == location) && (weekday == 0 || d["weekday_id"] == weekday); 
@@ -258,12 +317,11 @@ export default {
         fulldata[objIndex].value = obj.value;
       });
 
-      this.cc_freq_hour = fulldata;
+      return fulldata;
     },
-     refreshNum: function(){
+    refreshNum: function(data){
       var location = this.selectedLoc;
       var weekday = this.selectedDayWeek;
-      var data = this.cc_all;
 
       var data_filtered = data.filter( function(d){
         return (location == 0 || d.location_id == location) && (weekday == 0 || d["weekday_id"] == weekday); 
@@ -275,12 +333,13 @@ export default {
         .entries(data_filtered); 
         
       data_grouped = data_grouped.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
-      this.cc_number = data_grouped;
+      return data_grouped;
     },
     refresh: function() {
-      this.filterFreqDay();
-      this.filterFreqHour();
-      this.refreshNum();
+      this.freq_day = this.filterFreqDay(this.cc_all);
+      this.freq_hour = this.filterFreqHour(this.cc_all);
+      this.cc_number = this.refreshNum(this.cc_all);
+      this.loy_number = this.refreshNum(this.loy_all);
     }
   }
 }

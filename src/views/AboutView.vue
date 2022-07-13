@@ -4,32 +4,44 @@
   <b-row class="m-3">
     <b-col sm="12">
       <b-card 
+        no-body
         align="center"
-        style=";margin-bottom:10px;"
       >
-        <b-row>
-          <b-col md="3" sm="12">       
+      <b-card-body class="p-0">
+        <b-row class="m-0 p-0">
+          <b-col md="2" sm="12">       
             <b-form-group
               id="fieldset-1"
               label="Select day"
               label-for="input-1"
+              class="m-0 mt-2"
               >
               <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="refresh"></b-form-select>
             </b-form-group>
           </b-col>
-          <b-col md="7" sm="12">
+          <b-col md="10" sm="12">
             <b-form-group
               id="fieldset-2"
               label="Slide to change time"
               label-for="range-1"
+              class="m-0 mt-2"
               >
-              <b-form-input id="range-1" v-model="selectedTimeID" type="range" :min="minTimeID" :max="maxTimeID"></b-form-input>
+              <b-row class="m-0 p-0">
+              <b-col sm="2">
+                <p>{{time[minTimeID]}}</p>
+              </b-col>
+              <b-col sm="8">
+                <b-form-input id="range-1" v-model="selectedTimeID" type="range" :min="minTimeID" :max="maxTimeID"></b-form-input>
+                <p><b>{{time[selectedTimeID]}}</b></p>
+              </b-col>
+              <b-col sm="2">
+                <p>{{time[maxTimeID]}}</p>
+              </b-col>
+              </b-row>
             </b-form-group>
           </b-col>
-          <b-col md="2" sm="12">
-            <div class="mt-2"><b>{{ time[selectedTimeID] }}</b></div>
-          </b-col>
         </b-row>
+      </b-card-body>
       </b-card>
     </b-col>
   </b-row>
@@ -42,7 +54,7 @@
         header-text-variant="info"
         style=";margin-bottom:10px;"
       >
-        <MapD3 :datetime="time[selectedTimeID]"></MapD3>
+        <MapD3 :datetime="selectedDay + ' ' + time[selectedTimeID]"></MapD3>
       </b-card>
     </b-col>
     <b-col sm="12" md="3">
@@ -78,7 +90,7 @@ export default {
   data: function(){
     return{
       employees: [],
-      selectedDay: '01-06-2014',
+      selectedDay: '2014-01-06',
       days:[],
       time_all: [],
       time: {},
@@ -115,11 +127,12 @@ export default {
       }
       return tt;
     });
-console.log(this.time_all)
+
     d3.csv("/data/time.csv")
     .then((rows) => {
       for(var i = 0; i < rows.length; i++){
-        this.time[rows[i].id] = rows[i].timestamp
+        var d = new Date(rows[i].timestamp)
+        this.time[rows[i].id] = d.toLocaleTimeString('it-IT')
       }
     });
 
@@ -143,7 +156,6 @@ console.log(this.time_all)
       var day = this.selectedDay;
       var data = this.time_all;
 
-      console.log(day);
       var data_filtered = data.filter( function(d){
         if (day == '01-01-1900' || d["day"] == day) { return d; } 
       });
@@ -153,6 +165,9 @@ console.log(this.time_all)
       this.minTimeID = Math.min.apply(Math, ids) 
       this.maxTimeID = Math.max.apply(Math, ids) 
       this.selectedTimeID = this.minTimeID
+    },
+    getTime: function(date){
+      return date.getHours().toString() + ':' + date.getMinutes().toString()
     },
     refresh: function() {
       this.filterTime()
