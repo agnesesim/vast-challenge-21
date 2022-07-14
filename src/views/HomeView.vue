@@ -1,6 +1,5 @@
 <template>
 <b-container class="bv-example-row">
-
   <b-row class="m-3">
     <b-col sm="12" md="3">
       <b-card no-body 
@@ -78,18 +77,49 @@
       </b-card>
     </b-col>
   </b-row>
-  <b-row>
-    <b-col sm="12">
-      <vue-horizontal-timeline :items="items" />
+ 
+  <b-row class="m-3">
+    <b-col md="9" sm="12">
+      <b-card 
+        header="Credit Card paths" 
+        align="center"
+        header-border-variant="info"
+        header-text-variant="info"
+      >
+      <b-row>
+        <b-col md="3" sm="12">
+          <b-form-group
+            id="fieldset-1"
+            label="Specific day"
+            label-for="input-1"
+            >
+            <b-form-select id="input-1" v-model="selectedDay" :options="days" @click="changeDay(selectedDay)"></b-form-select>
+          </b-form-group>
+        </b-col>
+        <b-col md="9" sm="12">
+          <b-form-group
+            id="fieldset-2"
+            label="Select credit card"
+            label-for="input-2"
+            >
+              <multiselect v-model="selectedCC" :options="CCs" :multiple="true" :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="value" track-by="value" :preselect-first="true">
+                <!-- <template slot="selection" slot-scope="{ values, search, isOpen }"><span class="multiselect__single" v-if="values.length &amp;&amp; !isOpen">{{ values.length }} options selected</span></template> -->
+              </multiselect>
+          </b-form-group>
+        </b-col>
+      </b-row>
+        <TimeLineD3 :data_source="dataset" :idSvg="'timeline'"></TimeLineD3>
+      </b-card>
     </b-col>
   </b-row>
 </b-container>
 </template>
 
-
+<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
 <script>
   import BarChartD3 from "@/components/BarChartD3";
-  import VueHorizontalTimeline from "vue-horizontal-timeline";
+  import TimeLineD3 from "@/components/TimeLineD3";
+  import Multiselect from 'vue-multiselect';
   
   import $ from 'jquery';
   import {nest} from 'd3-collection';
@@ -100,8 +130,8 @@ export default {
   name: 'HomeView',
   components:{
     BarChartD3,
-    VueHorizontalTimeline
-    // StackedBarChartD3
+    TimeLineD3,
+    Multiselect
   },
   data: function(){
     return{
@@ -125,6 +155,8 @@ export default {
       ],
       selectedDay: '01/01/1900',
       days:[],
+      selectedCC: [],
+      CCs:[],
       freq_day:[],
       freq_hour:[],
       option_day: {
@@ -143,28 +175,24 @@ export default {
           color: '#1183CF',
           //yDomain: this.selectedDayWeek == 0 ? [0, 100] : [0,50]
       },
-      items: [
-      {
-        title: "1939",
-        content:
-          "World War II, was a global war that lasted from 1939 to 1945. The vast majority of the world's countries—including all the great powers—eventually formed two opposing military alliances: the Allies and the Axis."
-      },
-      {
-        title: "1945",
-        content:
-          "The War in Vietnam, was a post–World War II armed conflict involving a largely British-Indian and French task force and Japanese troops from the Southern Expeditionary Army Group, versus the Vietnamese communist movement, the Viet Minh, for control of the country, after the unconditional Japanese surrender."
-      },
-      {
-        title: "1947",
-        content:
-          "The Paraguayan Civil War, also known as the Barefoot Revolution and the Second Paraguayan Civil War, was a conflict in Paraguay that lasted from March to August 1947."
-      },
-      {
-        title: "1954",
-        content:
-          "The Algerian War, was a war between France and the Algerian National Liberation Front (French: Front de Libération Nationale – FLN) from 1954 to 1962, which led to Algeria gaining its independence from France."
-      }
-    ]
+      dataset: 
+            [   {   data: [
+                    [new Date("2014-01-06 08:07:00"),"Abila Airport"], 
+                    [new Date("2014-01-06 11:20:00"),"Maximum Iron and Steel"], 
+                    [new Date("2014-01-06 13:50:00"),"U-Pump"], 
+                    [new Date("2014-01-06 19:20:00"),"General Grocer"]
+                    ],
+                    color: '#CC0000'
+                },
+                {   data: [
+                    [new Date("2014-01-06 05:40:00"),"General Grocer"], 
+                    [new Date("2014-01-06 10:29:00"),"Coffee Shack"], 
+                    [new Date("2014-01-06 13:40:00"),"Kronos Mart"], 
+                    [new Date("2014-01-06 19:10:00"),"Abila Airport"]
+                    ],
+                    color: '#39db24'
+                }
+            ]
     }
   },
   async mounted () {
@@ -196,7 +224,20 @@ export default {
       this.days = ds;
     });
 
-    this.cc_all = await d3.csv("/data/credit-cards-data.csv")
+    d3.csv("/data/credit-card-list.csv")
+    .then((rows) => {
+      var ds = []
+      for(var i = 0; i < rows.length; i++){
+          var d = {
+            value: rows[i].number,
+            text: rows[i].number,
+          }
+          ds.push(d);
+      }
+      this.CCs = ds;
+    });
+
+    this.cc_all = await d3.csv("/data/credit-card-data.csv")
     .then((rows) => {
       var cc = []
       for(var i = 0; i < rows.length; i++){
@@ -246,6 +287,9 @@ export default {
 
       this.selectedNum = numID;
       this.refresh();
+    },
+    changeDay: function(dayID){
+
     },
     filterFreqDay: function(data){
       var location = this.selectedLoc;
@@ -359,6 +403,6 @@ export default {
   background-color: teal !important;
 }
 .container{
-  max-width: 1600px;
+  max-width: 1300px;
 }
 </style>
