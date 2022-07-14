@@ -7,6 +7,7 @@
         <b-navbar-nav>
           <b-nav-item to="/">Locations Popularity</b-nav-item>
           <b-nav-item to="/about">Employees Movement</b-nav-item>
+          <b-nav-item to="/time">Timeline</b-nav-item>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>

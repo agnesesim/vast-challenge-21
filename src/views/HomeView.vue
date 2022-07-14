@@ -93,7 +93,7 @@
             label="Specific day"
             label-for="input-1"
             >
-            <b-form-select id="input-1" v-model="selectedDay" :options="days" @click="changeDay(selectedDay)"></b-form-select>
+            <b-form-select id="input-1" v-model="selectedDay" :options="days"></b-form-select>
           </b-form-group>
         </b-col>
         <b-col md="9" sm="12">
@@ -102,7 +102,7 @@
             label="Select credit card"
             label-for="input-2"
             >
-              <multiselect v-model="selectedCC" :options="CCs" :multiple="true" :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="value" track-by="value" :preselect-first="true">
+              <multiselect v-model="selectedCC" :options="CCs" :multiple="true" :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="value" track-by="value" :preselect-first="true" @close="changeMultiSelectCC()">
                 <!-- <template slot="selection" slot-scope="{ values, search, isOpen }"><span class="multiselect__single" v-if="values.length &amp;&amp; !isOpen">{{ values.length }} options selected</span></template> -->
               </multiselect>
           </b-form-group>
@@ -153,10 +153,6 @@ export default {
         {value: 6, text: 'Saturday'},
         {value: 7, text: 'Sunday'},
       ],
-      selectedDay: '01/01/1900',
-      days:[],
-      selectedCC: [],
-      CCs:[],
       freq_day:[],
       freq_hour:[],
       option_day: {
@@ -175,24 +171,31 @@ export default {
           color: '#1183CF',
           //yDomain: this.selectedDayWeek == 0 ? [0, 100] : [0,50]
       },
+      // newww
+      selectedDay: '2014-01-06',
+      days:[],
+      selectedCC: [],
+      CCs:[],
+      timelineColors: ['#e6194B', '#4363d8', '#ffe119', '#3cb44b', '#f58231', '#f032e6', '#bfef45', '#911eb4', '#42d4f4'],
       dataset: 
-            [   {   data: [
-                    [new Date("2014-01-06 08:07:00"),"Abila Airport"], 
-                    [new Date("2014-01-06 11:20:00"),"Maximum Iron and Steel"], 
-                    [new Date("2014-01-06 13:50:00"),"U-Pump"], 
-                    [new Date("2014-01-06 19:20:00"),"General Grocer"]
-                    ],
-                    color: '#CC0000'
-                },
-                {   data: [
-                    [new Date("2014-01-06 05:40:00"),"General Grocer"], 
-                    [new Date("2014-01-06 10:29:00"),"Coffee Shack"], 
-                    [new Date("2014-01-06 13:40:00"),"Kronos Mart"], 
-                    [new Date("2014-01-06 19:10:00"),"Abila Airport"]
-                    ],
-                    color: '#39db24'
-                }
-            ]
+      [   
+        {   data: [
+              [new Date("2014-01-06 08:07:00"),"Abila Airport"], 
+              [new Date("2014-01-06 11:20:00"),"Maximum Iron and Steel"], 
+              [new Date("2014-01-06 13:50:00"),"U-Pump"], 
+              [new Date("2014-01-06 19:20:00"),"General Grocer"]
+            ],
+            color: '#CC0000'
+        },
+        {   data: [
+              [new Date("2014-01-06 05:40:00"),"General Grocer"], 
+              [new Date("2014-01-06 10:29:00"),"Coffee Shack"], 
+              [new Date("2014-01-06 13:40:00"),"Kronos Mart"], 
+              [new Date("2014-01-06 19:10:00"),"Abila Airport"]
+            ],
+            color: '#39db24'
+        }
+      ]
     }
   },
   async mounted () {
@@ -242,6 +245,8 @@ export default {
       var cc = []
       for(var i = 0; i < rows.length; i++){
           var d = {
+            timestamp: rows[i].timestamp,
+            location: rows[i].location,
             location_id: rows[i].location_id,
             weekday_id: +rows[i].weekday_id,
             weekday: rows[i].weekday,
@@ -288,8 +293,37 @@ export default {
       this.selectedNum = numID;
       this.refresh();
     },
-    changeDay: function(dayID){
+    changeMultiSelectCC: function(){
+      var data = this.cc_all;
+      var day = this.selectedDay;
+      var colors = this.timelineColors;
+      var i = 0;
 
+      var final = []
+      this.selectedCC.forEach(element => {
+         var data_filtered = data
+         .filter( function(d){
+            if ( d["day"] == day) { return d; } 
+          })
+          .filter(function(d){
+            if (d["number"] == element.value) { return d; } 
+          });
+
+          var points = [];
+          data_filtered.forEach(p => {
+            points.push([new Date(p.timestamp), p.location]);
+          })
+
+          var creditcard = {
+            data: points,
+            color: colors[i]
+          }
+
+          i++;
+          final.push(creditcard);
+      });
+      console.log(final)
+      this.dataset = final;
     },
     filterFreqDay: function(data){
       var location = this.selectedLoc;
