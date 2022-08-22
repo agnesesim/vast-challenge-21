@@ -79,7 +79,7 @@
   </b-row>
  
   <b-row class="m-3">
-    <b-col md="9" sm="12">
+    <b-col sm="12">
       <b-card 
         header="Credit Card paths" 
         align="center"
@@ -90,25 +90,33 @@
         <b-col md="3" sm="12">
           <b-form-group
             id="fieldset-1"
-            label="Specific day"
+            label="Select a day"
             label-for="input-1"
             >
-            <b-form-select id="input-1" v-model="selectedDay" :options="days"></b-form-select>
+            <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="filterTimelineCC();filterTimelineLOY()"></b-form-select>
           </b-form-group>
         </b-col>
-        <b-col md="9" sm="12">
+        <b-col md="6" sm="12">
           <b-form-group
             id="fieldset-2"
-            label="Select credit card"
+            label="Select one or more credit cards"
             label-for="input-2"
             >
-              <multiselect v-model="selectedCC" :options="CCs" :multiple="true" :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="value" track-by="value" :preselect-first="true" @close="changeMultiSelectCC()">
-                <!-- <template slot="selection" slot-scope="{ values, search, isOpen }"><span class="multiselect__single" v-if="values.length &amp;&amp; !isOpen">{{ values.length }} options selected</span></template> -->
+              <multiselect v-model="selectedCC" :options="ccs" :multiple="true" :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="value" track-by="value" :preselect-first="true" @close="filterTimelineCC()">
               </multiselect>
           </b-form-group>
         </b-col>
+        <b-col md="3" sm="12">
+          <b-form-group
+            id="fieldset-3"
+            label="Select a loyalty card"
+            label-for="input-3"
+            >
+            <b-form-select id="input-3" v-model="selectedLoy" :options="loys" @change="filterTimelineLOY()"></b-form-select>
+          </b-form-group>
+        </b-col>
       </b-row>
-        <TimeLineD3 :data_source="dataset" :idSvg="'timeline'"></TimeLineD3>
+        <TimeLineD3 :data_source1="datasetCC" :data_source2="datasetLoy" :day="selectedDay" :idSvg="'timeline'"></TimeLineD3>
       </b-card>
     </b-col>
   </b-row>
@@ -175,27 +183,12 @@ export default {
       selectedDay: '2014-01-06',
       days:[],
       selectedCC: [],
-      CCs:[],
+      ccs:[],
+      selectedLoy: '',
+      loys:[],
       timelineColors: ['#e6194B', '#4363d8', '#ffe119', '#3cb44b', '#f58231', '#f032e6', '#bfef45', '#911eb4', '#42d4f4'],
-      dataset: 
-      [   
-        {   data: [
-              [new Date("2014-01-06 08:07:00"),"Abila Airport"], 
-              [new Date("2014-01-06 11:20:00"),"Maximum Iron and Steel"], 
-              [new Date("2014-01-06 13:50:00"),"U-Pump"], 
-              [new Date("2014-01-06 19:20:00"),"General Grocer"]
-            ],
-            color: '#CC0000'
-        },
-        {   data: [
-              [new Date("2014-01-06 05:40:00"),"General Grocer"], 
-              [new Date("2014-01-06 10:29:00"),"Coffee Shack"], 
-              [new Date("2014-01-06 13:40:00"),"Kronos Mart"], 
-              [new Date("2014-01-06 19:10:00"),"Abila Airport"]
-            ],
-            color: '#39db24'
-        }
-      ]
+      datasetCC: [],
+      datasetLoy: []
     }
   },
   async mounted () {
@@ -237,8 +230,22 @@ export default {
           }
           ds.push(d);
       }
-      this.CCs = ds;
+      this.ccs = ds;
     });
+
+    d3.csv("/data/loyalty-card-list.csv")
+    .then((rows) => {
+      var ds = []
+      for(var i = 0; i < rows.length; i++){
+          var d = {
+            value: rows[i].number,
+            text: rows[i].number,
+          }
+          ds.push(d);
+      }
+      this.loys = ds;
+    });
+
 
     this.cc_all = await d3.csv("/data/credit-card-data.csv")
     .then((rows) => {
@@ -247,6 +254,7 @@ export default {
           var d = {
             timestamp: rows[i].timestamp,
             location: rows[i].location,
+            price: rows[i].price,
             location_id: rows[i].location_id,
             weekday_id: +rows[i].weekday_id,
             weekday: rows[i].weekday,
@@ -264,6 +272,8 @@ export default {
       var ll = []
       for(var i = 0; i < rows.length; i++){
           var d = {
+            location: rows[i].location,
+            price: rows[i].price,
             location_id: rows[i].location_id,
             weekday_id: +rows[i].weekday_id,
             weekday: rows[i].weekday,
@@ -293,7 +303,7 @@ export default {
       this.selectedNum = numID;
       this.refresh();
     },
-    changeMultiSelectCC: function(){
+    filterTimelineCC: function(){
       var data = this.cc_all;
       var day = this.selectedDay;
       var colors = this.timelineColors;
@@ -311,19 +321,52 @@ export default {
 
           var points = [];
           data_filtered.forEach(p => {
-            points.push([new Date(p.timestamp), p.location]);
+            points.push([new Date(p.timestamp), p.location, p.price]);
           })
 
           var creditcard = {
             data: points,
-            color: colors[i]
+            color: colors[i],
+            title: element.value
           }
 
           i++;
           final.push(creditcard);
       });
+      this.datasetCC= final;
+    },
+    filterTimelineLOY: function(){
+      var data = this.loy_all;
+      var day = this.selectedDay;
+      var num = this.selectedLoy;
+      var colors = this.timelineColors;
+      var i = 0;
+
+      var final = []
+         var data_filtered = data
+         .filter( function(d){
+            if ( d["day"] == day) { return d; } 
+          })
+          .filter(function(d){
+            if (d["number"] == num) { return d; } 
+          });
+
+          var points = [];
+          data_filtered.forEach(p => {
+            points.push([ p.location,p.location, p.price]);
+          })
+
+          var loyaltycard = {
+            data: points,
+            color: colors[i],
+            title: num
+          }
+
+          i++;
+          final.push(loyaltycard);
+  
       console.log(final)
-      this.dataset = final;
+      this.datasetLoy = final;
     },
     filterFreqDay: function(data){
       var location = this.selectedLoc;

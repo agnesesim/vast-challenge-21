@@ -1,45 +1,45 @@
-LastName,FirstName,CarID,CurrentEmploymentType,CurrentEmploymentTitle
-Calixto,Nils,1,Information Technology,IT Helpdesk
-Azada,Lars,2,Engineering,Engineer
-Balas,Felix,3,Engineering,Engineer
-Barranco,Ingrid,4,Executive,SVP/CFO
-Baza,Isak,5,Information Technology,IT Technician
-Bergen,Linnea,6,Information Technology,IT Group Manager
-Orilla,Elsa,7,Engineering,Drill Technician
-Alcazar,Lucas,8,Information Technology,IT Technician
-Cazar,Gustav,9,Engineering,Drill Technician
-Campo-Corrente,Ada,10,Executive,SVP/CIO
-Calzas,Axel,11,Engineering,Hydraulic Technician
-Cocinaro,Hideki,12,Security,Site Control
-Ferro,Inga,13,Security,Site Control
-Dedos,Lidelse,14,Engineering,Engineering Group Manager
-Bodrogi,Loreto,15,Security,Site Control
-Vann,Isia,16,Security,Perimeter Control
-Flecha,Sven,17,Information Technology,IT Technician
-Frente,Birgitta,18,Engineering,Geologist
-Frente,Vira,19,Engineering,Hydraulic Technician
-Fusil,Stenig,20,Security,Building Control
-Osvaldo,Hennie,21,Security,Perimeter Control
-Nubarron,Adra,22,Security,Badging Office
-Lagos,Varja,23,Security,Badging Office
-Mies,Minke,24,Security,Perimeter Control
-Herrero,Kanon,25,Engineering,Geologist
-Onda,Marin,26,Engineering,Drill Site Manager
-Orilla,Kare,27,Engineering,Drill Technician
-Borrasca,Isande,28,Engineering,Drill Technician
-Ovan,Bertrand,29,Facilities,Facilities Group Manager
-Resumir,Felix,30,Security,Security Group Manager
-Sanjorge Jr.,Sten,31,Executive,President/CEO
-Strum,Orhan,32,Executive,SVP/COO
-Tempestad,Brand,33,Engineering,Drill Technician
-Vann,Edvard,34,Security,Perimeter Control
-Vasco-Pais,Willem,35,Executive,Environmental Safety Advisor
-Hafon,Albina,,Facilities,Truck Driver
-Hawelon,Benito,,Facilities,Truck Driver
-Hawelon,Claudio,,Facilities,Truck Driver
-Mies,Henk,,Facilities,Truck Driver
-Morlun,Valeria,,Facilities,Truck Driver
-Morlun,Adan,,Facilities,Truck Driver
-Morluniau,Cecilia,,Facilities,Truck Driver
-Nant,Irene,,Facilities,Truck Driver
-Scozzese,Dylan,,Facilities,Truck Driver
+LastName,FirstName,CarID,CurrentEmploymentType,CurrentEmploymentTitle,CCnum,LOYnum
+Calixto,Nils,1,Information Technology,IT Helpdesk,9551,L5777
+Azada,Lars,2,Engineering,Engineer,1415,L7783
+Balas,Felix,3,Engineering,Engineer,9635,L3191
+Barranco,Ingrid,4,Executive,SVP/CFO,7688,L4164
+Baza,Isak,5,Information Technology,IT Technician,6899,L6267
+Bergen,Linnea,6,Information Technology,IT Group Manager,7253,L1682
+Orilla,Elsa,7,Engineering,Drill Technician,2540,L5947
+Alcazar,Lucas,8,Information Technology,IT Technician,7889,L6119
+Cazar,Gustav,9,Engineering,Drill Technician,1877,L3014
+Campo-Corrente,Ada,10,Executive,SVP/CI8332O,8332,L2070
+Calzas,Axel,11,Engineering,Hydraulic Technician,1321,L4149
+Cocinaro,Hideki,12,Security,Site Control,7108,L6544
+Ferro,Inga,13,Security,Site Control,7819,L5259
+Dedos,Lidelse,14,Engineering,Engineering Group Manager,1874,L4424
+Bodrogi,Loreto,15,Security,Site Control,3853,LL1485
+Vann,Isia,16,Security,Perimeter Control,7354,L9254
+Flecha,Sven,17,Information Technology,IT Technician,7384,L3800
+Frente,Birgitta,18,Engineering,Geologist,9617,L5553
+Frente,Vira,19,Engineering,Hydraulic Technician,6895,L3366
+Fusil,Stenig,20,Security,Building Control,6816,L8148
+Osvaldo,Hennie,21,Security,Perimeter Control,9405,L3259
+Nubarron,Adra,22,Security,Badging Office,1286,L3572
+Lagos,Varja,23,Security,Badging Office,3484,L2490
+Mies,Minke,24,Security,Perimeter Control,4434,L2169
+Herrero,Kanon,25,Engineering,Geologist,2142,L6937
+Onda,Marin,26,Engineering,Drill Site Manager,1310,L8012
+Orilla,Kare,27,Engineering,Drill Technician,3492,L7814
+Borrasca,Isande,28,Engineering,Drill Technician,9241,L3288
+Ovan,Bertrand,29,Facilities,Facilities Group Manager,5921,L3295
+Resumir,Felix,30,Security,Security Group Manager,6901,L9363
+Sanjorge Jr.,Sten,31,Executive,President/CEO,5010,L2459
+Strum,Orhan,32,Executive,SVP/COO,8156,L5224
+Tempestad,Brand,33,Engineering,Drill Technician,9683,L7291
+Vann,Edvard,34,Security,Perimeter Control,4795,L8566
+Vasco-Pais,Willem,35,Executive,Environmental Safety Advisor,2463,L6886
+Hafon,Albina,,Facilities,Truck Driver,9220,L4063
+Hawelon,Benito,,Facilities,Truck Driver,3506,L7761
+Hawelon,Claudio,,Facilities,Truck Driver,9614,L5924
+Mies,Henk,,Facilities,Truck Driver,8642,L2769
+Morlun,Valeria,,Facilities,Truck Driver,7792,L5756
+Morlun,Adan,,Facilities,Truck Driver,9152,L5485
+Morluniau,Cecilia,,Facilities,Truck Driver,9735,L9633
+Nant,Irene,,Facilities,Truck Driver,4530,L8477
+Scozzese,Dylan,,Facilities,Truck Driver,2276,L3317
