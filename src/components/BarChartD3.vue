@@ -33,7 +33,7 @@
         
         $('#'+id).empty();
         const svg = d3.select('#'+id);
-        width = svg.node().getBoundingClientRect().width;
+         if (svg.node() === null) width = 640; else width = svg.node().getBoundingClientRect().width;
         xRange = [marginLeft, width - marginRight]
 
         // Compute values.
