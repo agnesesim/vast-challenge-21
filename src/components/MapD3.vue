@@ -74,7 +74,6 @@
         },
         async mounted(){
             this.data_structure =  await d3.json("/data/Abila1.json")
-            console.log(this.data_structure)
             this.gps = await d3.csv("/data/gps_clean.csv")
             .then((rows) => {
                 var gs = []

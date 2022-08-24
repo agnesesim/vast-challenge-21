@@ -21,13 +21,9 @@
             width = 950, // the outer width of the chart, in pixels
             height = 500, // the outer height of the chart, in pixels
             yLabel, // a label for the y-axis
-            yDomain = ["Ouzeri Elian","Brewed Awakenings","Hallowed Grounds","Roberts and Sons","Shoppers' Delight","Abila Airport","Carlyle Chemical Inc.","Kronos Pipe and Irrigation","Frank's Fuel","Maximum Iron and Steel","Katerina s Café","Ahaggo Museum","Kronos Mart","Nationwide Refinery","Hippokampos","Coffee Shack","Stewart and Sons Fabrication","Albert's Fine Clothing","Frydos Autosupply n' More","Desafio Golf Course","Abila Zacharo","Guy's Gyros","Gelatogalore","General Grocer","Kalami Kafenion","Octavio's Office Supplies","Jack's Magical Beans","Coffee Cameleon","U-Pump","Chostus Hotel","Brew've Been Served","Bean There Done That","Daily Dealz","Abila Scrapyard"]
+            yDomain = [ "Brew've Been Served","Hallowed Grounds","Coffee Cameleon","Brewed Awakenings","Jack's Magical Beans","Bean There Done That","Coffee Shack","Chostus Hotel","Hippokampos","Ouzeri Elian","Katerina s Café","Gelatogalore","Abila Zacharo","Kalami Kafenion","Guy's Gyros","Octavio's Office Supplies","General Grocer","Shoppers' Delight","Albert's Fine Clothing","Frydos Autosupply n' More","Roberts and Sons","Desafio Golf Course","Ahaggo Museum","Abila Airport","Kronos Pipe and Irrigation","Carlyle Chemical Inc.","Nationwide Refinery","Stewart and Sons Fabrication","Maximum Iron and Steel","Abila Scrapyard","Kronos Mart","Daily Dealz","Frank's Fuel","U-Pump"].reverse()
         } = {},
         ) {
-            console.log('data1')
-            console.log(data1)
-            console.log('data2')
-            console.log(data2)
         $('#external').empty();
         // const svg = d3.select('#'+id);
         // width = svg.node().getBoundingClientRect().width;
@@ -71,7 +67,6 @@
             .style("color", "white")
         // -2- Create 3 functions to show / update (when mouse move but stay on same circle) / hide the tooltip
         const showTooltip = function(event, d) {
-            console.log(d)
             tooltip
             .transition()
             .duration(200)
@@ -93,6 +88,7 @@
         
         var i = 0;
         data1.forEach(element => {
+            //cerchio
              svg.append('g')
                 .selectAll("dot")
                 .data(element.data)
@@ -105,6 +101,7 @@
                 .on("mouseover", showTooltip )
                 .on("mouseleave", hideTooltip )
 
+            //connessione
             svg.append("path")
                 .datum(element.data) 
                 .attr("class", "line") 
@@ -113,21 +110,22 @@
                 .style("stroke", element.color)
                 .style("stroke-width", "2");
             
-             // Add one dot in the legend for each name.
+            //cerchio legenda
             svg.selectAll("legend_dot")
                 .data(element.data)
                 .enter()
                 .append("circle")
-                .attr("cx", marginLeft + i*60)
+                .attr("cx", 10 + i*120)
                 .attr("cy",  10)
                 .attr("r", 4)
                 .style("fill", element.color)
 
+            //titolo legenda
             svg.selectAll("legend_title")
                 .data(element.data)
                 .enter()
                 .append("text")
-                .attr("x", marginLeft + 7 + i*60)
+                .attr("x", 17 + i*120)
                 .attr("y", 12)
                 .style("fill", element.color)
                 .text(element.title)
@@ -138,16 +136,16 @@
        
        var j = 0;
        data2.forEach(element => {
-        console.log(element)
             svg.append('g')
                 .selectAll("dot")
                 .data(element.data)
                 .enter()
-                .append("circle")
-                .attr("cx", width - 100 + j*10 )
-                .attr("cy", function (d) { return yScale(d[0]); } )
-                .attr("r", 5)
-                .style("fill", "black") 
+                .append("rect")
+                .attr("x", width - 100 + j*10 )
+                .attr("y", function (d) { return yScale(d[0])-4; } )
+                .attr("width", 8)
+                .attr("height", 8)
+                .style("fill", element.color) 
                 .on("mouseover", showTooltip )
                 .on("mouseleave", hideTooltip )
 
@@ -156,8 +154,6 @@
         svg.append("g")
             .attr("transform", `translate(0,${height - marginBottom})`)
             .call(xAxis);
-
-        // return svg.node();
     }
 
     export default {

@@ -8,8 +8,8 @@
         header-text-variant="info"
         align="center"
       >
-        <b-list-group>
-          <b-list-group-item v-for="loc in locations" :id="loc.value" :key="loc.value" class="d-flex justify-content-between align-items-center locList" @click="changeLocation(loc.value)">
+        <b-list-group style="max-height:450px">
+          <b-list-group-item v-for="loc in locations" :id="'loc_' +loc.value" :key="loc.value" class="d-flex justify-content-between align-items-center locList" @click="changeLocation(loc.value)">
             {{loc.text}}
             <b-badge v-if="loc.pop > 150" variant="danger">very popular</b-badge>
             <b-badge v-else-if="loc.pop >= 20" variant="warning">popular</b-badge>
@@ -58,17 +58,23 @@
             header-text-variant="info"
           >
             <b-tab title="Credit Cards" class="m-0 p-0" active>
-              <b-list-group>
-                <b-list-group-item v-for="num in cc_number" :id="num.key" :key="num.key" class="d-flex justify-content-between align-items-center numList"  @click="changeCCNumber(num.key)">
-                  **** **** **** {{num.key}}
-                  <b-badge variant="info">{{num.value}}</b-badge>
+              <b-list-group style="max-height:450px">
+                <b-list-group-item v-for="num in cc_number" :id="num.key" :key="num.key" class="d-flex justify-content-between align-items-start">
+                <div class="flex-column m-0 p-0" align="left">
+                  **** **** **** {{num.key.split(',')[0]}}<br>
+                  <p class="m-0 p-0">{{num.key.split(',')[1]}}</p>
+                </div>
+                <b-badge variant="info">{{num.value}}</b-badge>
                 </b-list-group-item>
               </b-list-group>
             </b-tab>
             <b-tab title="Loyalty Cards"  class="m-0 p-0" >
-              <b-list-group>
-                <b-list-group-item v-for="num in loy_number" :id="num.key" :key="num.key" class="d-flex justify-content-between align-items-center numList"  @click="changeCCNumber(num.key)">
-                  {{num.key}}
+              <b-list-group style="max-height:450px">
+                <b-list-group-item v-for="num in loy_number" :id="num.key" :key="num.key" class="d-flex justify-content-between align-items-start">
+                <div class="flex-column m-0 p-0" align="left">
+                  **** **** **** {{num.key.split(',')[0]}}<br>
+                  <p class="m-0 p-0">{{num.key.split(',')[1]}}</p>
+                </div>
                   <b-badge variant="info">{{num.value}}</b-badge>
                 </b-list-group-item>
               </b-list-group>
@@ -79,9 +85,9 @@
   </b-row>
  
   <b-row class="m-3">
-    <b-col sm="12">
+    <b-col md="9" sm="12">
       <b-card 
-        header="Credit Card paths" 
+        header="Daily paths" 
         align="center"
         header-border-variant="info"
         header-text-variant="info"
@@ -96,7 +102,12 @@
             <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="filterTimelineCC();filterTimelineLOY()"></b-form-select>
           </b-form-group>
         </b-col>
-        <b-col md="6" sm="12">
+        <b-col md="9" sm="12">
+          <div class="float-right">
+            <b-button variant="danger" @click="selectEmployees()">Clear</b-button>
+          </div>
+        </b-col>
+        <!-- <b-col md="6" sm="12">
           <b-form-group
             id="fieldset-2"
             label="Select one or more credit cards"
@@ -114,9 +125,23 @@
             >
             <b-form-select id="input-3" v-model="selectedLoy" :options="loys" @change="filterTimelineLOY()"></b-form-select>
           </b-form-group>
-        </b-col>
+        </b-col> -->
       </b-row>
         <TimeLineD3 :data_source1="datasetCC" :data_source2="datasetLoy" :day="selectedDay" :idSvg="'timeline'"></TimeLineD3>
+      </b-card>
+    </b-col>
+    <b-col md="3" sm="12">
+      <b-card no-body 
+        header="Employees"
+        header-border-variant="info"
+        header-text-variant="info"
+        align="center"
+      >
+        <b-list-group style="max-height:670px">
+          <b-list-group-item v-for="emp in employees" :id="'emp_' + emp.id" :key="emp.id" class="d-flex justify-content-between align-items-center empList" @click="selectEmployees(emp.id, emp.value)">
+            {{emp.text}}
+          </b-list-group-item>
+        </b-list-group>
       </b-card>
     </b-col>
   </b-row>
@@ -127,7 +152,7 @@
 <script>
   import BarChartD3 from "@/components/BarChartD3";
   import TimeLineD3 from "@/components/TimeLineD3";
-  import Multiselect from 'vue-multiselect';
+  // import Multiselect from 'vue-multiselect';
   
   import $ from 'jquery';
   import {nest} from 'd3-collection';
@@ -139,7 +164,7 @@ export default {
   components:{
     BarChartD3,
     TimeLineD3,
-    Multiselect
+    // Multiselect
   },
   data: function(){
     return{
@@ -179,12 +204,13 @@ export default {
           color: '#1183CF',
           //yDomain: this.selectedDayWeek == 0 ? [0, 100] : [0,50]
       },
-      // newww
       selectedDay: '2014-01-06',
       days:[],
+      employees:[],
+      selectedEmp: {},
       selectedCC: [],
       ccs:[],
-      selectedLoy: '',
+      selectedLoy: [],
       loys:[],
       timelineColors: ['#e6194B', '#4363d8', '#ffe119', '#3cb44b', '#f58231', '#f032e6', '#bfef45', '#911eb4', '#42d4f4'],
       datasetCC: [],
@@ -246,6 +272,21 @@ export default {
       this.loys = ds;
     });
 
+    d3.csv("/data/card-assignments.csv")
+      .then((rows) => {
+        var empls = []
+        for(var i = 0; i < rows.length; i++){
+            var p = {
+              id: rows[i].FirstName.replace(' ','') + rows[i].LastName.replace(' ',''),
+              text: rows[i].FirstName + " " + rows[i].LastName,
+              value: { cc: rows[i].last4ccnum, loy: rows[i].loyaltynum }
+            }
+            empls.push(p);
+
+            this.selectedEmp[p.id] = false;
+        }
+        this.employees = empls;
+      });
 
     this.cc_all = await d3.csv("/data/credit-card-data.csv")
     .then((rows) => {
@@ -260,7 +301,8 @@ export default {
             weekday: rows[i].weekday,
             hour: +rows[i].hour,
             day: rows[i].day,
-            number: rows[i].last4ccnum
+            number: rows[i].last4ccnum,
+            employee: rows[i].FirstName + " " + rows[i].LastName
           }
           cc.push(d);
       }
@@ -270,6 +312,7 @@ export default {
     this.loy_all = await d3.csv("/data/loyalty-card-data.csv")
     .then((rows) => {
       var ll = []
+      
       for(var i = 0; i < rows.length; i++){
           var d = {
             location: rows[i].location,
@@ -279,7 +322,8 @@ export default {
             weekday: rows[i].weekday,
             hour: +rows[i].hour,
             day: rows[i].day,
-            number: rows[i].loyaltynum
+            number: rows[i].loyaltynum,
+            employee: rows[i].FirstName + " " + rows[i].LastName
           }
           ll.push(d);
       }
@@ -291,7 +335,7 @@ export default {
   methods: {
     changeLocation: function(locID){
       $('.locList').removeClass('active');  
-      $('#' + locID).addClass('active');
+      $('#loc_'  + locID).addClass('active');
 
       this.selectedLoc = locID;
       this.refresh();
@@ -302,6 +346,33 @@ export default {
 
       this.selectedNum = numID;
       this.refresh();
+    },
+    selectEmployees: function(empID, empValue){
+      if (empID == null){
+        $('.empList').removeClass('active');  
+        this.selectedCC = [];
+        this.selectedLoy = [];
+      }
+      else {
+        var cc = this.selectedCC;
+        var loy = this.selectedLoy;
+
+        this.selectedEmp[empID] = !this.selectedEmp[empID]
+        if (this.selectedEmp[empID]){
+          $('#emp_'  + empID).addClass('active');
+          cc.push({ employee: empID,number: empValue.cc})
+          loy.push({ employee: empID,number: empValue.loy})
+        }
+        else {
+          $('#emp_'  + empID).removeClass('active');
+          this.selectedCC = this.selectedCC.filter(val => val.number != empValue.cc)
+          this.selectedLoy = this.selectedLoy.filter(val => val.number != empValue.loy)
+        }
+      }
+
+
+      this.filterTimelineCC();
+      this.filterTimelineLOY();
     },
     filterTimelineCC: function(){
       var data = this.cc_all;
@@ -316,7 +387,7 @@ export default {
             if ( d["day"] == day) { return d; } 
           })
           .filter(function(d){
-            if (d["number"] == element.value) { return d; } 
+            if (d["number"] == element.number) { return d; } 
           });
 
           var points = [];
@@ -327,7 +398,7 @@ export default {
           var creditcard = {
             data: points,
             color: colors[i],
-            title: element.value
+            title: element.employee
           }
 
           i++;
@@ -338,34 +409,34 @@ export default {
     filterTimelineLOY: function(){
       var data = this.loy_all;
       var day = this.selectedDay;
-      var num = this.selectedLoy;
       var colors = this.timelineColors;
       var i = 0;
 
       var final = []
-         var data_filtered = data
-         .filter( function(d){
-            if ( d["day"] == day) { return d; } 
-          })
-          .filter(function(d){
-            if (d["number"] == num) { return d; } 
-          });
+       this.selectedLoy.forEach(element => {
+        var data_filtered = data
+        .filter( function(d){
+          if ( d["day"] == day) { return d; } 
+        })
+        .filter(function(d){
+          if (d["number"] == element.number) { return d; } 
+        });
 
-          var points = [];
-          data_filtered.forEach(p => {
-            points.push([ p.location,p.location, p.price]);
-          })
+        var points = [];
+        data_filtered.forEach(p => {
+          points.push([ p.location,p.location, p.price]);
+        })
 
-          var loyaltycard = {
-            data: points,
-            color: colors[i],
-            title: num
-          }
+        var loyaltycard = {
+          data: points,
+          color: colors[i],
+          title: element.employee
+        }
 
-          i++;
-          final.push(loyaltycard);
-  
-      console.log(final)
+        i++;
+        final.push(loyaltycard);
+      });
+
       this.datasetLoy = final;
     },
     filterFreqDay: function(data){
@@ -447,13 +518,14 @@ export default {
       var data_filtered = data.filter( function(d){
         return (location == 0 || d.location_id == location) && (weekday == 0 || d["weekday_id"] == weekday); 
       });
-
+      
       var data_grouped = nest()
-        .key(function(d) { return d.number;})
+        .key(function(d) { return [d.number, d.employee];})
         .rollup(function(v) { return v.length; })
         .entries(data_filtered); 
-        
+
       data_grouped = data_grouped.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+
       return data_grouped;
     },
     refresh: function() {
@@ -468,7 +540,6 @@ export default {
 
 <style scoped>
 .list-group{
-    max-height: 450px;
     margin-bottom: 10px;
     overflow:scroll;
     -webkit-overflow-scrolling: touch;
@@ -479,6 +550,10 @@ export default {
 .locList .active{
   background-color: teal !important;
 }
+.empList .active{
+  background-color: teal !important;
+}
+
 .container{
   max-width: 1300px;
 }
