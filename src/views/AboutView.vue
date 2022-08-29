@@ -19,7 +19,7 @@
               <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="refresh"></b-form-select>
             </b-form-group>
           </b-col>
-          <b-col md="10" sm="12">
+          <b-col md="8" sm="12">
             <b-form-group
               id="fieldset-2"
               label="Slide to change time"
@@ -28,17 +28,29 @@
               >
               <b-row class="m-0 p-0">
               <b-col sm="2">
-                <p>{{time[minTimeID]}}</p>
+                <p>{{time_label[minTimeID]}}</p>
               </b-col>
               <b-col sm="8">
                 <b-form-input id="range-1" v-model="selectedTimeID" type="range" :min="minTimeID" :max="maxTimeID"></b-form-input>
-                <p><b>{{time[selectedTimeID]}}</b></p>
+                <p><b>{{time_label[selectedTimeID]}}</b></p>
               </b-col>
               <b-col sm="2">
-                <p>{{time[maxTimeID]}}</p>
+                <p>{{time_label[maxTimeID]}}</p>
               </b-col>
               </b-row>
             </b-form-group>
+          </b-col>
+          <b-col md="2" sm="12">      
+            <br> 
+            <b-form-checkbox
+              id="checkbox-1"
+              v-model="allDay"
+              name="checkbox-1"
+              value="true"
+              unchecked-value="false"
+            >
+              All day
+            </b-form-checkbox>
           </b-col>
         </b-row>
       </b-card-body>
@@ -54,7 +66,7 @@
         header-text-variant="info"
         style=";margin-bottom:10px;"
       >
-        <MapD3 :datetime="selectedDay + ' ' + time[selectedTimeID]"></MapD3>
+        <MapD3 :datetime="selectedDay + ' ' + time_label[selectedTimeID]" :employees="employees_dict" :allDay="allDay=='true'"></MapD3>
       </b-card>
     </b-col>
     <b-col sm="12" md="3">
@@ -65,7 +77,7 @@
           align="center"
         >
         <b-list-group>
-          <b-list-group-item v-for="emp in employees" :id="emp.value" :key="emp.value" class="d-flex justify-content-between align-items-center empList">
+          <b-list-group-item v-for="emp in employees_list" :id="'emp_' + emp.value" :key="emp.value" class="d-flex justify-content-between align-items-center empList" @click="filterEmployees(emp.value)">
             {{emp.text}}
           </b-list-group-item>
         </b-list-group>
@@ -78,7 +90,7 @@
 
 <script>
   import MapD3 from "@/components/MapD3";
-
+  import $ from 'jquery';
 
   const d3 = require('d3');
 
@@ -89,14 +101,16 @@ export default {
   },
   data: function(){
     return{
-      employees: [],
-      selectedDay: '2014-01-06',
+      allDay:false,
       days:[],
+      selectedDay: '2014-01-06',
       time_all: [],
-      time: {},
+      time_label: {},
       selectedTimeID: 1,
       minTimeID:1,
       maxTimeID:6407,
+      employees_list: [],
+      employees_dict: {},
     }
   },
   async mounted () {
@@ -132,7 +146,7 @@ export default {
     .then((rows) => {
       for(var i = 0; i < rows.length; i++){
         var d = new Date(rows[i].timestamp)
-        this.time[rows[i].id] = d.toLocaleTimeString('it-IT')
+        this.time_label[rows[i].id] = d.toLocaleTimeString('it-IT')
       }
     });
 
@@ -145,13 +159,27 @@ export default {
             text: rows[i].LastName + ' ' + rows[i].FirstName,
           }
           emp.push(e);
+          this.employees_dict[e.value] = false;
+          this.employees_dict[+e.value+100] = this.randomColor();
       }
-      this.employees = emp;
+      this.employees_list = emp;
     });
 
     this.refresh();
   },
   methods: {
+    filterEmployees: function(empID){
+      if (empID == null){
+        $('.empList').removeClass('active');  
+      }
+      else {
+        this.employees_dict[empID] = !this.employees_dict[empID]
+        if (this.employees_dict[empID])
+          $('#emp_'  + empID).addClass('active');
+        else 
+          $('#emp_'  + empID).removeClass('active');
+      }
+    },
     filterTime: function(){
       var day = this.selectedDay;
       var data = this.time_all;
@@ -166,6 +194,9 @@ export default {
       this.maxTimeID = Math.max.apply(Math, ids) 
       this.selectedTimeID = this.minTimeID
     },
+    randomColor: function(){
+        return '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+    },
     getTime: function(date){
       return date.getHours().toString() + ':' + date.getMinutes().toString()
     },
@@ -178,7 +209,7 @@ export default {
 
 <style scoped>
 .list-group{
-    max-height: 450px;
+    max-height: 600px;
     margin-bottom: 10px;
     overflow:scroll;
     -webkit-overflow-scrolling: touch;
