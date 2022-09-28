@@ -5,9 +5,9 @@
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-          <b-nav-item to="/">Locations Popularity</b-nav-item>
-          <b-nav-item to="/about">Employees Movement</b-nav-item>
-          <b-nav-item to="/time">Timeline</b-nav-item>
+          <b-nav-item to="/locations">Locations Popularity</b-nav-item>
+          <b-nav-item to="/timeline">Timeline</b-nav-item>
+          <b-nav-item to="/map">Employees Movement</b-nav-item>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>

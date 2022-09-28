@@ -1,123 +1,80 @@
 <template>
     <b-container class="bv-example-row">
       <b-row class="m-3">
-        <b-col sm="12">
+        <b-col md="9" sm="12">
           <b-card 
-            no-body
+            header="Daily paths" 
             align="center"
+            header-border-variant="info"
+            header-text-variant="info"
           >
-          <b-card-body class="p-0">
-            <b-row class="m-0 p-0">
-              <b-col md="2" sm="12">       
-                <b-form-group
-                  id="fieldset-1"
-                  label="Select day"
-                  label-for="input-1"
-                  class="m-0 mt-2"
-                  >
-                  <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="filterTime"></b-form-select>
-                </b-form-group>
-              </b-col>
-              <b-col md="8" sm="12">
-                <b-form-group
-                  id="fieldset-2"
-                  label="Slide to change time"
-                  label-for="range-1"
-                  class="m-0 mt-2"
-                  >
-                  <b-row class="m-0 p-0">
-                  <b-col sm="2">
-                    <p>{{time_label[minTimeID]}}</p>
-                  </b-col>
-                  <b-col sm="8">
-                    <b-form-input id="range-1" v-model="selectedTimeID" type="range" :min="minTimeID" :max="maxTimeID"></b-form-input>
-                    <p><b>{{time_label[selectedTimeID]}}</b></p>
-                  </b-col>
-                  <b-col sm="2">
-                    <p>{{time_label[maxTimeID]}}</p>
-                  </b-col>
-                  </b-row>
-                </b-form-group>
-              </b-col>
-              <b-col md="2" sm="12">      
-                <br> 
-                <b-form-checkbox
-                  id="checkbox-1"
-                  v-model="allDay"
-                  name="checkbox-1"
-                  value="true"
-                  unchecked-value="false"
+          <b-row>
+            <b-col md="3" sm="12">
+              <b-form-group
+                id="fieldset-1"
+                label="Select a day"
+                label-for="input-1"
                 >
-                  All day
-                </b-form-checkbox>
-              </b-col>
-            </b-row>
-          </b-card-body>
+                <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="filterTimelineCC();filterTimelineLOY()"></b-form-select>
+              </b-form-group>
+            </b-col>
+            <b-col md="9" sm="12">
+              <div class="float-right">
+                <b-button variant="danger" @click="selectEmployees()">Clear</b-button>
+              </div>
+            </b-col>
+          </b-row>
+            <TimeLineD3 :data_source1="datasetCC" :data_source2="datasetLoy" :day="selectedDay" :idSvg="'timeline'"></TimeLineD3>
           </b-card>
         </b-col>
-      </b-row>
-      <b-row class="m-3">
-        <b-col sm="12" md="3">
-            <b-card no-body 
-                header="Employees"
-                header-border-variant="info"
-                header-text-variant="info"
-                align="center"
-                >
-                <b-list-group>
-                    <b-list-group-item v-for="emp in employees_list" :id="'emp_' + emp.value" :key="emp.value" class="d-flex justify-content-between align-items-center empList" @click="filterEmployees(emp.value)">
-                        {{emp.text}}
-                    </b-list-group-item>
-                </b-list-group>
-            </b-card>
-        </b-col>
-        <b-col>
-            <h2>SELECTED DAY&TIME: {{selectedDay + ' ' + time_label[selectedTimeID]}}</h2>
-            <p>{{selectedEmployeesID}}</p>
-
-            <p>{{data_points}}</p>
-
-
-            <p>{{mypoints}}</p>
-
-            <p>{{gps.length}}</p>
+        <b-col md="3" sm="12">
+          <b-card no-body 
+            header="Employees"
+            header-border-variant="info"
+            header-text-variant="info"
+            align="center"
+          >
+            <b-list-group style="max-height:670px">
+              <b-list-group-item v-for="emp in employees" :id="'emp_' + emp.id" :key="emp.id" class="d-flex justify-content-between align-items-center empList" @click="selectEmployees(emp.id, emp.value)">
+                {{emp.text}}
+              </b-list-group-item>
+            </b-list-group>
+          </b-card>
         </b-col>
       </b-row>
     </b-container>
     </template>
     
+    <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
+    <script>
+      import TimeLineD3 from "@/components/GraphD3/TimeLineD3";
+      
+      import $ from 'jquery';
     
- <script>
-    
-  import $ from 'jquery';
-    const d3 = require('d3');
+      const d3 = require('d3');
     
     export default {
-      name: 'TimelineView',
+      name: 'HomeView',
       components:{
+        TimeLineD3,
       },
       data: function(){
         return{
-          allDay:false,
           days:[],
+          employees:[],
+          allCC:[],
+          allLOY:[],
           selectedDay: '2014-01-06',
-          time_all: [],
-          time_label: {},
-          selectedTimeID: 1,
-          minTimeID:1,
-          maxTimeID:6407,
-          employees_list: [],
-          employees_dict: {},
-          employees_colors: {},
-          selectedEmployeesID: [],
-
-
-            data_points: [],
-            gps: []
+          selectedEmp: {},
+          selectedCC: [],
+          selectedLoy: [],
+          timelineColors: ['#e6194B', '#4363d8', '#ffe119', '#3cb44b', '#f58231', '#f032e6', '#bfef45', '#911eb4', '#42d4f4'],
+          datasetCC: [],
+          datasetLoy: []
         }
       },
       async mounted () {
-        
+            
         d3.csv("/data/specific-days.csv")
         .then((rows) => {
           var ds = []
@@ -130,129 +87,163 @@
           }
           this.days = ds;
         });
-        
-        this.time_all = await d3.csv("/data/time.csv")
-        .then((rows) => {
-          var tt = []
-          for(var i = 0; i < rows.length; i++){
-            var d = {
-              time_id: +rows[i].id,
-              timestamp: rows[i].timestamp,
-              day: rows[i].day
-            }
-            tt.push(d);
     
-            var date = new Date(rows[i].timestamp)
-            this.time_label[rows[i].id] = date.toLocaleTimeString('it-IT')
-          }
-          return tt;
-        });
-    
-        d3.csv("/data/car-assignments.csv")
-        .then((rows) => {
-          var emp = []
-          for(var i = 0; i < rows.length; i++){
-              var e = {
-                value: rows[i].CarID == null ? i+1 : rows[i].CarID, 
-                text: rows[i].LastName + ' ' + rows[i].FirstName,
-              }
-              emp.push(e);
-              this.employees_dict[+e.value] = false;
-              this.employees_colors[+e.value] = this.randomColor();
-          }
-          this.employees_list = emp;
-        });
-    
-        this.gps = await d3.csv("/data/gps_all.csv")
-            .then((rows) => {
-                var gs = []
-                for(var i = 0; i < rows.length; i++){
-                    var g = {
-                        timestamp: rows[i].timestamp,
-                        id: +rows[i].id_employee,
-                        lat: rows[i].lat,
-                        long: +rows[i].long,
-                        color: this.employees_colors[+rows[i].id_employee]
-                    }
-                    gs.push(g);
+        d3.csv("/data/card-assignments.csv")
+          .then((rows) => {
+            var empls = []
+            for(var i = 0; i < rows.length; i++){
+                var p = {
+                  id: rows[i].FirstName.replace(' ','') + rows[i].LastName.replace(' ',''),
+                  text: rows[i].FirstName + " " + rows[i].LastName,
+                  value: { cc: rows[i].last4ccnum, loy: rows[i].loyaltynum }
                 }
-                return gs;
-            });
-            
-        this.filterTime();
-      },
-      methods: {
-
-        filterEmployees: function(empID){
-            if (empID == null){
-                $('.empList').removeClass('active');  
-            }
-            else {
-                this.employees_dict[empID] = !this.employees_dict[empID]
-                if (this.employees_dict[empID]){
-                    this.selectedEmployeesID.push(empID);
-                    $('#emp_'  + empID).addClass('active');
-                    $('#emp_'  + empID).css("background-color", this.employees_colors[+empID])
-                }
-                else {
-   
-                        this.selectedEmployeesID = this.selectedEmployeesID.filter( e => e != empID);
-                    $('#emp_'  + empID).removeClass('active');
-                    $('#emp_'  + empID).css("background-color", "#fff")
-                }
-            }
-        },
-        filterTime: function(){
-          var day = this.selectedDay;
-          var data = this.time_all;
+                empls.push(p);
     
-          var data_filtered = data.filter( function(d){
-            if (day == '01-01-1900' || d["day"] == day) { return d; } 
+                this.selectedEmp[p.id] = false;
+            }
+            this.employees = empls;
           });
     
-          var ids = data_filtered.map(item => item.time_id)
+        this.allCC = await d3.csv("/data/credit-card-data.csv")
+        .then((rows) => {
+          var cc = []
+          for(var i = 0; i < rows.length; i++){
+              var d = {
+                timestamp: rows[i].timestamp,
+                location: rows[i].location,
+                price: rows[i].price,
+                location_id: rows[i].location_id,
+                weekday_id: +rows[i].weekday_id,
+                weekday: rows[i].weekday,
+                hour: +rows[i].hour,
+                day: rows[i].day,
+                number: rows[i].last4ccnum,
+                employee: rows[i].FirstName + " " + rows[i].LastName
+              }
+              cc.push(d);
+          }
+          return cc;
+        });
     
-          this.minTimeID = Math.min.apply(Math, ids) 
-          this.maxTimeID = Math.max.apply(Math, ids) 
-          this.selectedTimeID = this.minTimeID
-
-          this.filterPoints();
-        },
-        filterPoints: function(){
-            var time = this.selectedDay + ' ' + this.time_label[this.selectedTimeID];
-            var emps = this.employees_dict;
-            var data = this.gps;
-
-            var data_filtered = data.filter( function(d){
-                    return d["timestamp"] == time && emps[d["id"]] == true
-            });
-
-            this.data_points = data_filtered;
-        },
-        randomColor: function(){
-          return '#'+(Math.random()*0xFFFFFF<<0).toString(16);
-        }
+        this.allLOY = await d3.csv("/data/loyalty-card-data.csv")
+        .then((rows) => {
+          var ll = []
+          
+          for(var i = 0; i < rows.length; i++){
+              var d = {
+                location: rows[i].location,
+                price: rows[i].price,
+                location_id: rows[i].location_id,
+                weekday_id: +rows[i].weekday_id,
+                weekday: rows[i].weekday,
+                hour: +rows[i].hour,
+                day: rows[i].day,
+                number: rows[i].loyaltynum,
+                employee: rows[i].FirstName + " " + rows[i].LastName
+              }
+              ll.push(d);
+          }
+          return ll;
+        });
       },
-      computed: {
-        mypoints() {
-            var time = this.selectedDay + ' ' + this.time_label[this.selectedTimeID];
-            var emps = this.employees_dict;
-            var data = this.gps;
+      methods: {
+        selectEmployees: function(empID, empValue){
+          if (empID == null){
+            $('.empList').removeClass('active');  
+            this.selectedCC = [];
+            this.selectedLoy = [];
+          }
+          else {
+            var cc = this.selectedCC;
+            var loy = this.selectedLoy;
+    
+            this.selectedEmp[empID] = !this.selectedEmp[empID]
+            if (this.selectedEmp[empID]){
+              $('#emp_'  + empID).addClass('active');
+              cc.push({ employee: empID,number: empValue.cc})
+              loy.push({ employee: empID,number: empValue.loy})
+            }
+            else {
+              $('#emp_'  + empID).removeClass('active');
+              this.selectedCC = this.selectedCC.filter(val => val.number != empValue.cc)
+              this.selectedLoy = this.selectedLoy.filter(val => val.number != empValue.loy)
+            }
+          }
 
-            var data_filtered = data.filter( function(d){
-                    return d["timestamp"] == time && emps[d["id"]] == true
+          this.filterTimelineCC();
+          this.filterTimelineLOY();
+        },
+        filterTimelineCC: function(){
+          var data = this.allCC;
+          var day = this.selectedDay;
+          var colors = this.timelineColors;
+          var i = 0;
+    
+          var final = []
+          this.selectedCC.forEach(element => {
+             var data_filtered = data
+             .filter( function(d){
+                if ( d["day"] == day) { return d; } 
+              })
+              .filter(function(d){
+                if (d["number"] == element.number) { return d; } 
+              });
+    
+              var points = [];
+              data_filtered.forEach(p => {
+                points.push([new Date(p.timestamp), p.location, p.price]);
+              })
+    
+              var creditcard = {
+                data: points,
+                color: colors[i],
+                title: element.employee
+              }
+    
+              i++;
+              final.push(creditcard);
+          });
+          this.datasetCC= final;
+        },
+        filterTimelineLOY: function(){
+          var data = this.allLOY;
+          var day = this.selectedDay;
+          var colors = this.timelineColors;
+          var i = 0;
+    
+          var final = []
+           this.selectedLoy.forEach(element => {
+            var data_filtered = data
+            .filter( function(d){
+              if ( d["day"] == day) { return d; } 
+            })
+            .filter(function(d){
+              if (d["number"] == element.number) { return d; } 
             });
-
-            return data_filtered;
+    
+            var points = [];
+            data_filtered.forEach(p => {
+              points.push([ p.location,p.location, p.price]);
+            })
+    
+            var loyaltycard = {
+              data: points,
+              color: colors[i],
+              title: element.employee
+            }
+    
+            i++;
+            final.push(loyaltycard);
+          });
+    
+          this.datasetLoy = final;
         }
       }
-
     }
     </script>
     
     <style scoped>
     .list-group{
-        max-height: 600px;
         margin-bottom: 10px;
         overflow:scroll;
         -webkit-overflow-scrolling: touch;
@@ -260,9 +251,10 @@
         padding:0px !important;
     }
     
-    .locList .active{
+    .empList .active{
       background-color: teal !important;
     }
+    
     .container{
       max-width: 1300px;
     }

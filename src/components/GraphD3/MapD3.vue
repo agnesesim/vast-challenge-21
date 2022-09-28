@@ -37,7 +37,7 @@
             path
         };
     }
-
+    
     function addPoints(data, { width = 800, height = 550, scale = 500000} = {}){
         
         const projection = d3.geoMercator()

@@ -83,76 +83,12 @@
       </b-card>
     </b-col>
   </b-row>
- 
-  <b-row class="m-3">
-    <b-col md="9" sm="12">
-      <b-card 
-        header="Daily paths" 
-        align="center"
-        header-border-variant="info"
-        header-text-variant="info"
-      >
-      <b-row>
-        <b-col md="3" sm="12">
-          <b-form-group
-            id="fieldset-1"
-            label="Select a day"
-            label-for="input-1"
-            >
-            <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="filterTimelineCC();filterTimelineLOY()"></b-form-select>
-          </b-form-group>
-        </b-col>
-        <b-col md="9" sm="12">
-          <div class="float-right">
-            <b-button variant="danger" @click="selectEmployees()">Clear</b-button>
-          </div>
-        </b-col>
-        <!-- <b-col md="6" sm="12">
-          <b-form-group
-            id="fieldset-2"
-            label="Select one or more credit cards"
-            label-for="input-2"
-            >
-              <multiselect v-model="selectedCC" :options="ccs" :multiple="true" :close-on-select="false" :clear-on-select="false" :preserve-search="true" label="value" track-by="value" :preselect-first="true" @close="filterTimelineCC()">
-              </multiselect>
-          </b-form-group>
-        </b-col>
-        <b-col md="3" sm="12">
-          <b-form-group
-            id="fieldset-3"
-            label="Select a loyalty card"
-            label-for="input-3"
-            >
-            <b-form-select id="input-3" v-model="selectedLoy" :options="loys" @change="filterTimelineLOY()"></b-form-select>
-          </b-form-group>
-        </b-col> -->
-      </b-row>
-        <TimeLineD3 :data_source1="datasetCC" :data_source2="datasetLoy" :day="selectedDay" :idSvg="'timeline'"></TimeLineD3>
-      </b-card>
-    </b-col>
-    <b-col md="3" sm="12">
-      <b-card no-body 
-        header="Employees"
-        header-border-variant="info"
-        header-text-variant="info"
-        align="center"
-      >
-        <b-list-group style="max-height:670px">
-          <b-list-group-item v-for="emp in employees" :id="'emp_' + emp.id" :key="emp.id" class="d-flex justify-content-between align-items-center empList" @click="selectEmployees(emp.id, emp.value)">
-            {{emp.text}}
-          </b-list-group-item>
-        </b-list-group>
-      </b-card>
-    </b-col>
-  </b-row>
 </b-container>
 </template>
 
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
 <script>
-  import BarChartD3 from "@/components/BarChartD3";
-  import TimeLineD3 from "@/components/TimeLineD3";
-  // import Multiselect from 'vue-multiselect';
+  import BarChartD3 from "@/components/GraphD3/BarChartD3";
   
   import $ from 'jquery';
   import {nest} from 'd3-collection';
@@ -163,8 +99,6 @@ export default {
   name: 'HomeView',
   components:{
     BarChartD3,
-    TimeLineD3,
-    // Multiselect
   },
   data: function(){
     return{
@@ -172,7 +106,6 @@ export default {
       cc_number: [],
       loy_all:[],
       loy_number: [],
-      selectedNum: 0,
       selectedLoc: 11,
       locations:[],
       selectedDayWeek: 0,
@@ -204,17 +137,6 @@ export default {
           color: '#1183CF',
           //yDomain: this.selectedDayWeek == 0 ? [0, 100] : [0,50]
       },
-      selectedDay: '2014-01-06',
-      days:[],
-      employees:[],
-      selectedEmp: {},
-      selectedCC: [],
-      ccs:[],
-      selectedLoy: [],
-      loys:[],
-      timelineColors: ['#e6194B', '#4363d8', '#ffe119', '#3cb44b', '#f58231', '#f032e6', '#bfef45', '#911eb4', '#42d4f4'],
-      datasetCC: [],
-      datasetLoy: []
     }
   },
   async mounted () {
@@ -232,61 +154,6 @@ export default {
       locs = locs.sort((a, b) => parseFloat(b.pop) - parseFloat(a.pop));
       this.locations = locs;
     });
-        
-    d3.csv("/data/specific-days.csv")
-    .then((rows) => {
-      var ds = []
-      for(var i = 0; i < rows.length; i++){
-          var d = {
-            value: rows[i].day,
-            text: rows[i].eu_day,
-          }
-          ds.push(d);
-      }
-      this.days = ds;
-    });
-
-    d3.csv("/data/credit-card-list.csv")
-    .then((rows) => {
-      var ds = []
-      for(var i = 0; i < rows.length; i++){
-          var d = {
-            value: rows[i].number,
-            text: rows[i].number,
-          }
-          ds.push(d);
-      }
-      this.ccs = ds;
-    });
-
-    d3.csv("/data/loyalty-card-list.csv")
-    .then((rows) => {
-      var ds = []
-      for(var i = 0; i < rows.length; i++){
-          var d = {
-            value: rows[i].number,
-            text: rows[i].number,
-          }
-          ds.push(d);
-      }
-      this.loys = ds;
-    });
-
-    d3.csv("/data/card-assignments.csv")
-      .then((rows) => {
-        var empls = []
-        for(var i = 0; i < rows.length; i++){
-            var p = {
-              id: rows[i].FirstName.replace(' ','') + rows[i].LastName.replace(' ',''),
-              text: rows[i].FirstName + " " + rows[i].LastName,
-              value: { cc: rows[i].last4ccnum, loy: rows[i].loyaltynum }
-            }
-            empls.push(p);
-
-            this.selectedEmp[p.id] = false;
-        }
-        this.employees = empls;
-      });
 
     this.cc_all = await d3.csv("/data/credit-card-data.csv")
     .then((rows) => {
@@ -339,105 +206,6 @@ export default {
 
       this.selectedLoc = locID;
       this.refresh();
-    },
-    changeCCNumber: function(numID){
-      $('.numList').removeClass('active');  
-      $('#' + numID).addClass('active');
-
-      this.selectedNum = numID;
-      this.refresh();
-    },
-    selectEmployees: function(empID, empValue){
-      if (empID == null){
-        $('.empList').removeClass('active');  
-        this.selectedCC = [];
-        this.selectedLoy = [];
-      }
-      else {
-        var cc = this.selectedCC;
-        var loy = this.selectedLoy;
-
-        this.selectedEmp[empID] = !this.selectedEmp[empID]
-        if (this.selectedEmp[empID]){
-          $('#emp_'  + empID).addClass('active');
-          cc.push({ employee: empID,number: empValue.cc})
-          loy.push({ employee: empID,number: empValue.loy})
-        }
-        else {
-          $('#emp_'  + empID).removeClass('active');
-          this.selectedCC = this.selectedCC.filter(val => val.number != empValue.cc)
-          this.selectedLoy = this.selectedLoy.filter(val => val.number != empValue.loy)
-        }
-      }
-
-
-      this.filterTimelineCC();
-      this.filterTimelineLOY();
-    },
-    filterTimelineCC: function(){
-      var data = this.cc_all;
-      var day = this.selectedDay;
-      var colors = this.timelineColors;
-      var i = 0;
-
-      var final = []
-      this.selectedCC.forEach(element => {
-         var data_filtered = data
-         .filter( function(d){
-            if ( d["day"] == day) { return d; } 
-          })
-          .filter(function(d){
-            if (d["number"] == element.number) { return d; } 
-          });
-
-          var points = [];
-          data_filtered.forEach(p => {
-            points.push([new Date(p.timestamp), p.location, p.price]);
-          })
-
-          var creditcard = {
-            data: points,
-            color: colors[i],
-            title: element.employee
-          }
-
-          i++;
-          final.push(creditcard);
-      });
-      this.datasetCC= final;
-    },
-    filterTimelineLOY: function(){
-      var data = this.loy_all;
-      var day = this.selectedDay;
-      var colors = this.timelineColors;
-      var i = 0;
-
-      var final = []
-       this.selectedLoy.forEach(element => {
-        var data_filtered = data
-        .filter( function(d){
-          if ( d["day"] == day) { return d; } 
-        })
-        .filter(function(d){
-          if (d["number"] == element.number) { return d; } 
-        });
-
-        var points = [];
-        data_filtered.forEach(p => {
-          points.push([ p.location,p.location, p.price]);
-        })
-
-        var loyaltycard = {
-          data: points,
-          color: colors[i],
-          title: element.employee
-        }
-
-        i++;
-        final.push(loyaltycard);
-      });
-
-      this.datasetLoy = final;
     },
     filterFreqDay: function(data){
       var location = this.selectedLoc;
@@ -548,9 +316,6 @@ export default {
 }
 
 .locList .active{
-  background-color: teal !important;
-}
-.empList .active{
   background-color: teal !important;
 }
 
