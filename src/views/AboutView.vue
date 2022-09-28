@@ -16,14 +16,12 @@
               label-for="input-1"
               class="m-0 mt-2"
               >
-              <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="refresh"></b-form-select>
+              <b-form-select id="input-1" v-model="selectedDay" :options="days" @change="changeDate"></b-form-select>
             </b-form-group>
           </b-col>
           <b-col md="8" sm="12">
             <b-form-group
               id="fieldset-2"
-              label="Slide to change time"
-              label-for="range-1"
               class="m-0 mt-2"
               >
               <b-row class="m-0 p-0">
@@ -42,7 +40,8 @@
           </b-col>
           <b-col md="2" sm="12">      
             <br> 
-            <b-form-checkbox
+            <p @click="startTime">Play</p>
+            <!-- <b-form-checkbox
               id="checkbox-1"
               v-model="allDay"
               name="checkbox-1"
@@ -50,7 +49,7 @@
               unchecked-value="false"
             >
               All day
-            </b-form-checkbox>
+            </b-form-checkbox> -->
           </b-col>
         </b-row>
       </b-card-body>
@@ -59,14 +58,14 @@
   </b-row>
   <b-row class="m-3">
     <b-col sm="12" md="9">
-      <b-card 
+      <b-card
         header="Abila" 
         align="center"
         header-border-variant="info"
         header-text-variant="info"
         style=";margin-bottom:10px;"
       >
-        <MapD3 :datetime="selectedDay + ' ' + time_label[selectedTimeID]" :employees="employees_dict" :allDay="allDay=='true'"></MapD3>
+        <MapD3 :datetime="selectedDay + ' ' + time_label[selectedTimeID]" :employees="employees_dict" :colors="employees_colors" :allDay="allDay=='true'"></MapD3>
       </b-card>
     </b-col>
     <b-col sm="12" md="3">
@@ -111,6 +110,8 @@ export default {
       maxTimeID:6407,
       employees_list: [],
       employees_dict: {},
+      employees_colors: {},
+      interval: 0
     }
   },
   async mounted () {
@@ -138,16 +139,11 @@ export default {
           day: rows[i].day
         }
         tt.push(d);
+
+        var date = new Date(rows[i].timestamp)
+        this.time_label[rows[i].id] = date.toLocaleTimeString('it-IT')
       }
       return tt;
-    });
-
-    d3.csv("/data/time.csv")
-    .then((rows) => {
-      for(var i = 0; i < rows.length; i++){
-        var d = new Date(rows[i].timestamp)
-        this.time_label[rows[i].id] = d.toLocaleTimeString('it-IT')
-      }
     });
 
     d3.csv("/data/car-assignments.csv")
@@ -159,13 +155,13 @@ export default {
             text: rows[i].LastName + ' ' + rows[i].FirstName,
           }
           emp.push(e);
-          this.employees_dict[e.value] = false;
-          this.employees_dict[+e.value+100] = this.randomColor();
+          this.employees_dict[+e.value] = false;
+          this.employees_colors[+e.value] = this.randomColor();
       }
       this.employees_list = emp;
     });
 
-    this.refresh();
+    this.changeDate();
   },
   methods: {
     filterEmployees: function(empID){
@@ -174,13 +170,17 @@ export default {
       }
       else {
         this.employees_dict[empID] = !this.employees_dict[empID]
-        if (this.employees_dict[empID])
+        if (this.employees_dict[empID]){
           $('#emp_'  + empID).addClass('active');
-        else 
+          $('#emp_'  + empID).css("background-color", this.employees_colors[+empID])
+        }
+        else {
           $('#emp_'  + empID).removeClass('active');
+          $('#emp_'  + empID).css("background-color", "#fff")
+        }
       }
     },
-    filterTime: function(){
+    changeDate: function(){
       var day = this.selectedDay;
       var data = this.time_all;
 
@@ -194,14 +194,17 @@ export default {
       this.maxTimeID = Math.max.apply(Math, ids) 
       this.selectedTimeID = this.minTimeID
     },
+    incrementTime: function(){
+      if (this.selectedTimeID < this.maxTimeID)
+        this.selectedTimeID ++;
+      else 
+        clearInterval(this.interval);
+    },
+    startTime: function(){
+      this.interval = setInterval(this.incrementTime, 100);
+    },
     randomColor: function(){
-        return '#'+(Math.random()*0xFFFFFF<<0).toString(16);
-    },
-    getTime: function(date){
-      return date.getHours().toString() + ':' + date.getMinutes().toString()
-    },
-    refresh: function() {
-      this.filterTime()
+      return '#'+(Math.random()*0xFFFFFF<<0).toString(16);
     }
   }
 }
@@ -221,6 +224,6 @@ export default {
   background-color: teal !important;
 }
 .container{
-  max-width: 1600px;
+  max-width: 1300px;
 }
 </style>
