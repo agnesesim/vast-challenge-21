@@ -18,7 +18,6 @@
         const path = d3.geoPath()
             .projection(projection);
         
-            console.log(struct.features)
         svg.append('g').attr("id",'map')
             .selectAll('path')
             .data(struct.features)
@@ -37,7 +36,7 @@
             path
         };
     }
-    
+
     function addPoints(data, { width = 800, height = 550, scale = 500000} = {}){
         
         const projection = d3.geoMercator()

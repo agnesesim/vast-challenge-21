@@ -25,11 +25,19 @@
               class="m-0 mt-2"
               >
               <b-row class="m-0 p-0">
+              <b-col>
+                <div class="h2 mb-0">
+                  <b-icon icon="play-circle-fill" variant="info" @click="startTime" style="cursor: pointer;"></b-icon>
+                  <b-icon icon="pause-circle-fill" variant="secondary"  @click="pauseTime" style="cursor: pointer;"></b-icon>
+                </div>
+              </b-col>
+              </b-row>
+              <b-row class="m-0 p-0">
               <b-col sm="2">
                 <p>{{time_label[minTimeID]}}</p>
               </b-col>
               <b-col sm="8">
-                <b-form-input id="range-1" v-model="selectedTimeID" type="range" :min="minTimeID" :max="maxTimeID"></b-form-input>
+                <b-form-input id="range-1" v-model="selectedTimeID" type="range" :min="minTimeID" :max="maxTimeID" class="info"></b-form-input>
                 <p><b>{{time_label[selectedTimeID]}}</b></p>
               </b-col>
               <b-col sm="2">
@@ -39,17 +47,25 @@
             </b-form-group>
           </b-col>
           <b-col md="2" sm="12">      
-            <br> 
-            <p @click="startTime">Play</p>
-            <!-- <b-form-checkbox
-              id="checkbox-1"
-              v-model="allDay"
-              name="checkbox-1"
-              value="true"
-              unchecked-value="false"
-            >
-              All day
-            </b-form-checkbox> -->
+            <b-row>
+              <b-form-group
+              id="fieldset-2"
+              label="Change Speed"
+              label-for="btn-radios-2"
+              class="m-0 mt-2"
+              >
+              <b-form-radio-group
+                  id="btn-radios-2"
+                  v-model="selectedSpeed"
+                  :options="speed"
+                  button-variant="outline-info"
+                  size="sm"
+                  name="radio-btn-outline"
+                  buttons
+                  @change="refreshInterval()"
+                ></b-form-radio-group>
+            </b-form-group>
+            </b-row>
           </b-col>
         </b-row>
       </b-card-body>
@@ -111,7 +127,14 @@ export default {
       employees_list: [],
       employees_dict: {},
       employees_colors: {},
-      interval: 0
+      interval: 0,
+      intervalPlay: false,
+      selectedSpeed: 1000,
+      speed:[
+        {value: 1000, text: 'x1'},
+        {value: 500, text: 'x2'},
+        {value: 100, text: 'x10'}
+      ],
     }
   },
   async mounted () {
@@ -162,6 +185,8 @@ export default {
     });
 
     this.changeDate();
+
+    this.refreshInterval();
   },
   methods: {
     filterEmployees: function(empID){
@@ -195,13 +220,23 @@ export default {
       this.selectedTimeID = this.minTimeID
     },
     incrementTime: function(){
-      if (this.selectedTimeID < this.maxTimeID)
-        this.selectedTimeID ++;
-      else 
-        clearInterval(this.interval);
+      if (this.intervalPlay){
+        if (this.selectedTimeID < this.maxTimeID)
+          this.selectedTimeID ++;
+        else 
+          this.selectedTimeID = this.minTimeID;
+      }
+    },
+    refreshInterval: function(){
+      clearInterval(this.interval);
+
+      this.interval = setInterval(this.incrementTime, this.selectedSpeed);
     },
     startTime: function(){
-      this.interval = setInterval(this.incrementTime, 100);
+      this.intervalPlay = true;
+    },
+    pauseTime: function(){
+      this.intervalPlay = false;
     },
     randomColor: function(){
       return '#'+(Math.random()*0xFFFFFF<<0).toString(16);
@@ -226,4 +261,5 @@ export default {
 .container{
   max-width: 1300px;
 }
+
 </style>
