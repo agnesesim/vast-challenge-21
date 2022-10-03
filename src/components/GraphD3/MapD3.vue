@@ -28,6 +28,8 @@
         
         svg.append("g").attr("id",'points')
         svg.append("g").attr("id",'points_path')
+        svg.append("g").attr("id",'price')
+
         return {
             width,
             height,
@@ -58,7 +60,6 @@
             .attr("fill-opacity", 0.5)
             .attr("stroke", "#fff")
             .attr("stroke-width", 0.5);
-
     }
 
     function addPaths(data, { width = 800, height = 550, scale = 500000} = {}){
@@ -96,7 +97,29 @@
             .style("fill", "none")
             .style("stroke",  d =>  d.color)
             .style("stroke-width", "5");
+    }
 
+    function addPrice(data, { width = 800, height = 550, scale = 500000} = {}){
+        
+        const projection = d3.geoMercator()
+            .center([24.8699, 36.07])
+            .scale(scale)
+            .translate([width / 2, height / 2]);
+
+        const gpoints = d3.select('#price')
+
+        gpoints
+            .selectAll("circle")
+            .data(data)
+            .join("circle")
+            .attr("cx", d =>  projection([d.long, d.lat])[0])
+            .attr("cy", d =>  projection([d.long, d.lat])[1])
+            .attr("r",  4)
+            .style("fill",  d =>  d.color)
+            .style("stroke", d =>  d.color)
+            .attr("fill-opacity", 0.5)
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 0.5);
     }
 
     export default {
@@ -117,7 +140,7 @@
         },
         async mounted(){
             this.data_structure =  await d3.json("/data/Abila1.json")
-            this.gps = await d3.csv("/data/gps_all.csv")
+            this.gps = await d3.csv("/data/gps_all_data.csv")
             .then((rows) => {
                 var gs = []
                 for(var i = 0; i < rows.length; i++){
@@ -126,7 +149,9 @@
                         id: +rows[i].id_employee,
                         lat: rows[i].lat,
                         long: +rows[i].long,
-                        color: this.colors[+rows[i].id_employee]
+                        color: this.colors[+rows[i].id_employee],
+                        location: rows[i].location,
+                        price: rows[i].price
                     }
                     gs.push(g);
                 }
@@ -156,8 +181,10 @@
                 this.filterPoints();
                 if (this.allDay)
                     addPaths(this.data_points);
-                else
+                else {
                     addPoints(this.data_points);
+                    addPrice(this.data_points);
+                }
             }
         },
         watch:{
